@@ -34,6 +34,51 @@ enum TriageColor {
   BLUE
 }
 
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum ComplaintCategory {
+  CHEST_PAIN
+  PALPITATIONS
+  HYPERTENSION
+  CARDIAC_ARREST
+  SHORTNESS_OF_BREATH
+  ASTHMA_COPD_FLARE
+  RESPIRATORY_ARREST
+  COUGH_HEMOPTYSIS
+  HEADACHE
+  SEIZURE
+  STROKE_CVA
+  LOSS_OF_CONSCIOUSNESS
+  CONFUSION_ALTERED_STATE
+  DIZZINESS_VERTIGO
+  ABDOMINAL_PAIN
+  NAUSEA_VOMITING
+  GI_BLEED
+  DIARRHEA
+  TRAUMA_FALL
+  TRAUMA_ROAD_ACCIDENT
+  TRAUMA_ASSAULT
+  BURN
+  LACERATION_CUT
+  HEAD_INJURY
+  FRACTURE_DISLOCATION
+  SUICIDAL_IDEATION
+  SELF_HARM
+  PSYCHOSIS_MANIA
+  ANXIETY_PANIC
+  AGGRESSIVE_BEHAVIOR
+  FEVER_SEPSIS
+  ALLERGIC_REACTION
+  OVERDOSE_POISONING
+  PREGNANCY_COMPLICATION
+  GENERAL_MALAISE
+  OTHER
+}
+
 // --- MODELS ---
 model User {
   id        String   @id @default(uuid())
@@ -42,6 +87,9 @@ model User {
   role      Role     @default(TRIAGE_NURSE)
   password  String   
   createdAt DateTime @default(now())
+  
+  // Relations
+  logs      ClinicalLog[]
 }
 
 model Ward {
@@ -54,7 +102,7 @@ model Ward {
 model Bed {
   id          String    @id @default(uuid())
   label       String
-  version     Int       @default(0) // Optimistic Locking
+  version     Int       @default(0)
   status      BedStatus @default(AVAILABLE)
   wardId      String
   ward        Ward      @relation(fields: [wardId], references: [id])
@@ -64,31 +112,40 @@ model Bed {
 }
 
 model Patient {
-  id            String       @id @default(uuid())
-  firstName     String
-  lastName      String
-  dob           DateTime
-  gender        String
-  nhsNumber     String       @unique
-  triageColor   TriageColor
-  triageScore   Int
-  chiefComplaint String
-  news2Score    Int          @default(0)
-  heartRate     Int?
-  bpSystolic    Int?
-  bpDiastolic   Int?
-  temperature   Float?
-  oxygenSat     Int?
-  admissionDate DateTime     @default(now())
-  bed           Bed?
-  history       ClinicalLog[]
+  id               String            @id @default(uuid())
+  firstName        String
+  lastName         String
+  dob              DateTime
+  gender           Gender            // Updated to Enum
+  nhsNumber        String            @unique
+  triageColor      TriageColor
+  triageScore      Int
+  
+  complaintDetails String?           // Free text (e.g. "Pain in left arm")
+  complaintCategory ComplaintCategory // Structured Data (e.g. CHEST_PAIN)
+  
+  news2Score       Int               @default(0)
+  heartRate        Int?
+  bpSystolic       Int?
+  bpDiastolic      Int?
+  temperature      Float?
+  oxygenSat        Int?
+  
+  admissionDate    DateTime          @default(now())
+  bed              Bed?
+  history          ClinicalLog[]
 }
 
 model ClinicalLog {
   id          String   @id @default(uuid())
   message     String
-  authorName  String
   timestamp   DateTime @default(now())
+  
+  // Relation to User (Author)
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  
+  // Relation to Patient
   patientId   String
   patient     Patient  @relation(fields: [patientId], references: [id])
 }
