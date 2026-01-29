@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Vital-Link Hospital System",
-  description: "Hospital Management System",
+  description: "Advanced Patient Management",
 };
 
 export default function RootLayout({

@@ -1,4 +1,5 @@
 import { PrismaClient, Role } from '@prisma/client'
+import { hash } from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
@@ -15,6 +16,8 @@ async function main() {
 
   console.log('🧹 Database cleaned.')
 
+  const passwordHash = await hash('password', 12)
+
   // 2. Create Staff (One for each Role)
   const staff = [
     { email: 'nurse@nhs.net', name: 'Nurse Muir', role: Role.TRIAGE_NURSE },
@@ -30,7 +33,7 @@ async function main() {
         email: s.email,
         name: s.name,
         role: s.role,
-        password: 'password' // We will handle hashing in the Login Phase
+        password: passwordHash,
       }
     })
   }
