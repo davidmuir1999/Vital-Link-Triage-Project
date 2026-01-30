@@ -1,8 +1,10 @@
-'use client'
+"use client";
 
 import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Button } from "./ui/button";
+import { Spinner } from "./ui/spinner";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -55,12 +57,22 @@ export default function LoginForm() {
     <div>
       <form onSubmit={handleSubmit}>
         <div>
-            <label>Email Address</label>
-            <input name="email" type="email" required placeholder="employee@nhs.net"/>
+          <label>Email Address</label>
+          <input
+            name="email"
+            type="email"
+            required
+            placeholder="employee@nhs.net"
+          />
         </div>
         <div>
-            <label>Password</label>
-            <input name="password" type="password" required placeholder="password123" />
+          <label>Password</label>
+          <input
+            name="password"
+            type="password"
+            required
+            placeholder="password123"
+          />
         </div>
 
         {error && (
@@ -69,9 +81,24 @@ export default function LoginForm() {
           </div>
         )}
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Authenticating..." : "Sign In"}
-        </button>
+        <Button
+          variant="outline"
+          size="lg"
+          disabled={loading}
+          className="relative min-w-[120px]"
+        >
+          {loading ? (
+            <>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Spinner />
+              </div>
+            </>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              Log In
+            </div>
+          )}
+        </Button>
       </form>
     </div>
   );
