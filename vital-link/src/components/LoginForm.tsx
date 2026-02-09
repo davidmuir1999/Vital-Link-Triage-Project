@@ -37,7 +37,7 @@ export default function LoginForm() {
           router.push("/triage");
           break;
         case "DOCTOR":
-          router.push("/ward/paediatrics");
+          router.push("/ward");
           break;
         case "SITE_MANAGER":
           router.push("/dashboard");
@@ -85,7 +85,7 @@ export default function LoginForm() {
           variant="outline"
           size="lg"
           disabled={loading}
-          className="relative min-w-[120px]"
+          className="relative min-w-30"
         >
           {loading ? (
             <>
