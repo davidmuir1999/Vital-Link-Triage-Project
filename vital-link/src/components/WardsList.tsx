@@ -21,7 +21,7 @@ export default function WardsList({ wards }: { wards: Ward[] }) {
         <Card key={ward.id} onClick={() => router.push(`/ward/${ward.id}`)} className="group cursor-pointer transition-all hover:scale-[1.02]">
           <CardHeader>
             <div className="flex justify-between items-start mb-4">
-              <div className={`p-3 rounded-lg ${
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
                 ward.type === 'Emergency' ? 'bg-red-100 text-red-600' :
                 ward.type === 'Paediatrics' ? 'bg-purple-100 text-purple-600' :
                 'bg-blue-100 text-blue-600'
@@ -33,7 +33,7 @@ export default function WardsList({ wards }: { wards: Ward[] }) {
               </span>
             </div>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent>
             <CardTitle className="text-lg font-bold text-gray-900 mb-1 group-hover:text-blue-600">
               {ward.name}
             </CardTitle>
