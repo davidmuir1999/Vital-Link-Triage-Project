@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 const rolePermissions: Record<string, string[]> = {
-  "/ward": ["DOCTOR"],
+  "/ward": ["DOCTOR", "WARD_NURSE"],
   "/triage": ["TRIAGE_NURSE"],
   "/ops": ["SITE_MANAGER"],
   "/cleaning": ["CLEANER"],
