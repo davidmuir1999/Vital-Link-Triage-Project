@@ -20,11 +20,11 @@ async function main() {
 
   // 2. Create Staff (One for each Role)
   const staff = [
-    { email: 'nurse@nhs.net', name: 'Nurse Muir', role: Role.TRIAGE_NURSE },
+    { email: 'triagenurse@nhs.net', name: 'Nurse Jeanette', role: Role.TRIAGE_NURSE },
     { email: 'doctor@nhs.net', name: 'Dr. Meikle', role: Role.DOCTOR },
     { email: 'manager@nhs.net', name: 'Michael Scott', role: Role.SITE_MANAGER },
     { email: 'cleaner@nhs.net', name: 'Barry Scott', role: Role.CLEANER },
-    { email: 'admin@nhs.net', name: 'Pam Beasley', role: Role.ADMIN },
+    { email: 'wardnurse@nhs.net', name: 'Nurse Isla', role: Role.WARD_NURSE },
   ]
 
   for (const s of staff) {

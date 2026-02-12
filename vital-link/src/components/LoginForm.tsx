@@ -31,23 +31,8 @@ export default function LoginForm() {
       setLoading(false);
     } else {
       const session = await getSession();
-
-      switch (session?.user.role) {
-        case "TRIAGE_NURSE":
-          router.push("/triage");
-          break;
-        case "DOCTOR":
-          router.push("/ward");
-          break;
-        case "SITE_MANAGER":
+      if (session) {
           router.push("/dashboard");
-          break;
-        case "CLEANER":
-          router.push("/cleaning");
-          break;
-        default:
-          router.push("/dashboard");
-          break;
       }
       router.refresh();
     }

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import Link from "next/link";
+import LogoutButton from "@/src/components/LogoutButton";
 import { getServerSession as getNextAuthSession } from "next-auth/next";
 
 export default async function DashboardLayout({
@@ -38,6 +38,11 @@ export default async function DashboardLayout({
             </div>
           </div>
         </div>
+        <div className="p-4 border-t border-gray-200">
+          <div className="mb-4">
+              <LogoutButton />
+          </div>
+        </div>
       </aside>
 
       {/* MAIN CONTENT AREA */}
@@ -45,17 +50,5 @@ export default async function DashboardLayout({
         {children}
       </main>
     </div>
-  );
-}
-
-// Helper Component for Links
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="block px-4 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-blue-600 transition-colors"
-    >
-      {children}
-    </Link>
   );
 }

@@ -16,7 +16,7 @@ enum Role {
   DOCTOR
   SITE_MANAGER
   CLEANER
-  ADMIN
+  WARD_NURSE
 }
 
 enum BedStatus {
