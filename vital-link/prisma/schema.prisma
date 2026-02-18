@@ -122,14 +122,19 @@ model Patient {
   triageScore      Int
   
   complaintDetails String?           // Free text (e.g. "Pain in left arm")
-  complaintCategory ComplaintCategory // Structured Data (e.g. CHEST_PAIN)
+  complaintCategory ComplaintCategory[] // Structured Data (e.g. CHEST_PAIN)
   
-  news2Score       Int               @default(0)
-  heartRate        Int?
-  bpSystolic       Int?
-  bpDiastolic      Int?
-  temperature      Float?
-  oxygenSat        Int?
+  respiratoryRate     Int
+  hypercapnicFailure  Boolean @default(false)
+  isOnOxygen          Boolean  @default(false)
+  oxygenSaturation    Int
+  temperature         Float
+  bpSystolic          Int
+  heartRate           Int
+  consciousness       String
+
+  news2Score          Int
+
   
   admissionDate    DateTime          @default(now())
   bed              Bed?

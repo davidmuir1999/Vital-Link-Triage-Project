@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import LogoutButton from "@/src/components/LogoutButton";
 import { getServerSession as getNextAuthSession } from "next-auth/next";
+import formatRole from "@/lib/formatRole";
 
 export default async function DashboardLayout({
   children,
@@ -33,7 +34,7 @@ export default async function DashboardLayout({
                 {session.user?.name}
               </p>
               <p className="text-xs text-gray-500 truncate">
-                {session.user?.role}
+                {session.user ? formatRole(session.user.role) : ""}
               </p>
             </div>
           </div>

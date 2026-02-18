@@ -34,16 +34,20 @@ export const TriageSchema = z.object({
         .regex(/^\d+$/, "NHS Number must contain only numbers"),
 
     // --- Clinical Info ---
-    complaintDetails: z.string().optional(), // Optional: Nurse might just pick a category
-    complaintCategory: ComplaintCategoryEnum,
-
-    // --- Vital Signs (Inputs for Risk Calculation) ---
-    // We use coerce to handle the string-to-number conversion from HTML inputs
-    heartRate: z.coerce.number().min(0).max(300, "Invalid HR"),
-    bpSystolic: z.coerce.number().min(0).max(300, "Invalid BP"),
-    bpDiastolic: z.coerce.number().min(0).max(200, "Invalid BP"),
-    temperature: z.coerce.number().min(20).max(45, "Invalid Temp"),
-    oxygenSat: z.coerce.number().min(0).max(100, "Invalid O2"),
+    respiratoryRate: z.coerce.number().min(0).max(100),
+    oxygenSat: z.coerce.number().min(0).max(100),
+    isOnOxygen: z.boolean().default(false), // Checkbox
+    hypercapnicFailure: z.boolean().default(false), // Checkbox (Risk of Type 2 failure)
+    
+    temperature: z.coerce.number().min(20).max(45),
+    bpSystolic: z.coerce.number().min(0).max(300),
+    heartRate: z.coerce.number().min(0).max(300),
+    
+    // ACVPU Scale
+    consciousness: z.enum(["ALERT", "CONFUSION", "VOICE", "PAIN", "UNRESPONSIVE"]),
+    
+    complaintCategory: z.array(z.string()).min(1, "Select at least one complaint"),
+    complaintDetails: z.string().optional(),
 });
 
 // Export the type so we can use it in our React Form
