@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { TriageSchema} from "../lib/validations/triage";
+import { TriageSchema } from "../lib/validations/triage";
 import { calculateNEWS2, getRiskColor } from "../lib/calculators/news2";
 import { Button } from "./ui/button";
 import {
@@ -37,6 +37,7 @@ export default function NewPatientForm() {
     z.output<typeof TriageSchema>
   >({
     resolver: zodResolver(TriageSchema),
+    mode: "onBlur",
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -77,24 +78,24 @@ export default function NewPatientForm() {
 
   const watchedVitals = form.watch([
     "respiratoryRate",
-    "isOnOxygen",
     "hypercapnicFailure",
-    "consciousness",
-    "heartRate",
-    "bpSystolic",
-    "temperature",
     "oxygenSat",
+    "isOnOxygen",
+    "temperature",
+    "bpSystolic",
+    "heartRate",
+    "consciousness",
   ]);
 
   const currentScore = calculateNEWS2({
-    respiratoryRate: Number(watchedVitals[0]) || 0,
-    oxygenSat: Number(watchedVitals[1]) || 0,
-    isOnOxygen: Boolean(watchedVitals[2]),
-    hypercapnicFailure: Boolean(watchedVitals[3]),
-    temperature: Number(watchedVitals[4]) || 0,
-    bpSystolic: Number(watchedVitals[5]) || 0,
-    heartRate: Number(watchedVitals[6]) || 0,
-    consciousness: (watchedVitals[7] as any) || "ALERT", 
+    respiratoryRate: Number(watchedVitals[0]) || 16,
+    hypercapnicFailure: Boolean(watchedVitals[1]),
+    oxygenSat: Number(watchedVitals[2]) || 96,
+    isOnOxygen: Boolean(watchedVitals[3]),
+    temperature: Number(watchedVitals[4]) || 36.5,
+    bpSystolic: Number(watchedVitals[5]) || 160,
+    heartRate: Number(watchedVitals[6]) || 70,
+    consciousness: (watchedVitals[7] as any) || "ALERT",
   });
 
   const scoreColor = getRiskColor(currentScore);
@@ -205,7 +206,14 @@ export default function NewPatientForm() {
 
         {/* --- SECTION 2: CLINICAL VITALS --- */}
         <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
-          <h3 className="font-medium text-blue-900">Vital Signs (NEWS2)</h3>
+          <div className="pb-4">
+            <h3 className="font-medium text-blue-900 m-0">
+              Vital Signs (NEWS2)
+            </h3>
+            <span className="text-xs font-mono bg-blue-100 text-blue-800 px-2 py-1 rounded">
+              Protocol: Adult (16+)
+            </span>
+          </div>
 
           <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
             <FormField
@@ -249,6 +257,24 @@ export default function NewPatientForm() {
 
             <FormField
               control={form.control}
+              name="oxygenSat"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Oxygen Saturation (SpO₂)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      {...field}
+                      value={field.value as string | number}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="isOnOxygen"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center space-x-3 space-y-0 border p-4 rounded-md">
@@ -264,24 +290,6 @@ export default function NewPatientForm() {
                       Check if patient is on Air/O₂
                     </p>
                   </div>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="oxygenSat"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Oxygen Saturation (SpO₂)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      value={field.value as string | number}
-                    />
-                  </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -389,7 +397,6 @@ export default function NewPatientForm() {
             </div>
           </div>
         </div>
-
         {/* --- SECTION 3: COMPLAINT --- */}
         <div className="space-y-4">
           <FormLabel>Presenting Complaints (Select all that apply)</FormLabel>
@@ -399,13 +406,41 @@ export default function NewPatientForm() {
     */}
             {[
               "CHEST_PAIN",
-              "SHORTNESS_OF_BREATH",
-              "HEADACHE",
-              "ABDOMINAL_PAIN",
-              "TRAUMA_FALL",
-              "FEVER_SEPSIS",
+              "PALPITATIONS",
               "HYPERTENSION",
+              "CARDIAC_ARREST",
+              "SHORTNESS_OF_BREATH",
+              "ASTHMA_COPD_FLARE",
+              "RESPIRATORY_ARREST",
+              "COUGH_HEMOPTYSIS",
+              "HEADACHE",
+              "SEIZURE",
+              "STROKE_CVA",
+              "LOSS_OF_CONSCIOUSNESS",
+              "CONFUSION_ALTERED_STATE",
+              "DIZZINESS_VERTIGO",
+              "ABDOMINAL_PAIN",
               "NAUSEA_VOMITING",
+              "GI_BLEED",
+              "DIARRHEA",
+              "TRAUMA_FALL",
+              "TRAUMA_ROAD_ACCIDENT",
+              "TRAUMA_ASSAULT",
+              "BURN",
+              "LACERATION_CUT",
+              "HEAD_INJURY",
+              "FRACTURE_DISLOCATION",
+              "SUICIDAL_IDEATION",
+              "SELF_HARM",
+              "PSYCHOSIS_MANIA",
+              "ANXIETY_PANIC",
+              "AGGRESSIVE_BEHAVIOR",
+              "FEVER_SEPSIS",
+              "ALLERGIC_REACTION",
+              "OVERDOSE_POISONING",
+              "PREGNANCY_COMPLICATION",
+              "GENERAL_MALAISE",
+              "OTHER",
             ].map((item) => (
               <FormField
                 key={item}
@@ -462,7 +497,6 @@ export default function NewPatientForm() {
             )}
           />
         </div>
-
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Admit to Triage
