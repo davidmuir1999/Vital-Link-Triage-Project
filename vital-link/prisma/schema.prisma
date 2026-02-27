@@ -26,14 +26,6 @@ enum BedStatus {
   MAINTENANCE
 }
 
-enum TriageColor {
-  RED
-  ORANGE
-  YELLOW
-  GREEN
-  BLUE
-}
-
 enum Gender {
   MALE
   FEMALE
@@ -118,8 +110,6 @@ model Patient {
   dob              DateTime
   gender           Gender            // Updated to Enum
   nhsNumber        String            @unique
-  triageColor      TriageColor
-  triageScore      Int
   
   complaintDetails String?           // Free text (e.g. "Pain in left arm")
   complaintCategory ComplaintCategory[] // Structured Data (e.g. CHEST_PAIN)
@@ -127,7 +117,7 @@ model Patient {
   respiratoryRate     Int
   hypercapnicFailure  Boolean @default(false)
   isOnOxygen          Boolean  @default(false)
-  oxygenSaturation    Int
+  oxygenSat           Int
   temperature         Float
   bpSystolic          Int
   heartRate           Int

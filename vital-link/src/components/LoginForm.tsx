@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Spinner } from "./ui/spinner";
+import { toast } from "sonner";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -30,6 +31,7 @@ export default function LoginForm() {
       setError("Invalid email or password");
       setLoading(false);
     } else {
+      toast.success("Logged In");
       const session = await getSession();
       if (session) {
           router.push("/dashboard");

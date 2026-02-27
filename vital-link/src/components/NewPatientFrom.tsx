@@ -5,7 +5,9 @@ import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TriageSchema } from "../lib/validations/triage";
 import { calculateNEWS2, getRiskColor } from "../lib/calculators/news2";
+import { createPatient } from "../actions/triage";
 import { Button } from "./ui/button";
+import { useRouter } from "next/navigation";
 import {
   Form,
   FormControl,
@@ -25,9 +27,11 @@ import {
 import { Checkbox } from "./ui/checkbox";
 // import { createPatient } from "@/app/actions/triage"
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Spinner } from "./ui/spinner";
+import { toast } from "sonner";
 
 export default function NewPatientForm() {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 1. Initialize Form with Zod Resolver
@@ -61,8 +65,6 @@ export default function NewPatientForm() {
   async function onSubmit(data: z.output<typeof TriageSchema>) {
     setIsSubmitting(true);
 
-    // We use FormData to pass to Server Action, or just pass the JSON object
-    // Passing the raw object is often cleaner if not uploading files
     const result = await createPatient(data);
 
     setIsSubmitting(false);
@@ -70,9 +72,10 @@ export default function NewPatientForm() {
     if (result?.error) {
       // Handle server-side errors (e.g. database offline)
       console.error(result.error);
-      alert("Failed to save patient. Check console.");
+      toast.error("Failed to save patient. Please try again.");
     } else {
-      form.reset(); // Clear form on success
+      toast.success("Patient Admitted");
+      router.push("/dashboard");
     }
   }
 
@@ -95,7 +98,13 @@ export default function NewPatientForm() {
     temperature: Number(watchedVitals[4]) || 36.5,
     bpSystolic: Number(watchedVitals[5]) || 160,
     heartRate: Number(watchedVitals[6]) || 70,
-    consciousness: (watchedVitals[7] as any) || "ALERT",
+    consciousness:
+      (watchedVitals[7] as
+        | "ALERT"
+        | "CONFUSION"
+        | "VOICE"
+        | "PAIN"
+        | "UNRESPONSIVE") || "ALERT",
   });
 
   const scoreColor = getRiskColor(currentScore);
@@ -498,7 +507,7 @@ export default function NewPatientForm() {
           />
         </div>
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isSubmitting && <Spinner />}
           Admit to Triage
         </Button>
       </form>
