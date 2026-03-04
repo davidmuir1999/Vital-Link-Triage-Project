@@ -27,7 +27,7 @@ export default async function WardPage({ params }: PageProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 h-screen">
       {/* HEADER & BACK BUTTON */}
       <div className="flex items-center justify-between">
         <div>
