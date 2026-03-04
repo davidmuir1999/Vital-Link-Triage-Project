@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import LogoutButton from "@/src/components/LogoutButton";
 import { getServerSession as getNextAuthSession } from "next-auth/next";
-import formatRole from "@/lib/formatRole";
+import { AppSidebar } from "@/src/components/AppSidebar";
+import { SidebarProvider, SidebarTrigger } from "@/src/components/ui/sidebar";
 
 export default async function DashboardLayout({
   children,
@@ -17,39 +17,16 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex bg-gray-100">
-
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-gray-200">
-          <span className="text-xl font-bold text-blue-700">Vital-Link</span>
+<SidebarProvider>
+      <AppSidebar session={session} />
+      <main className="flex-1 flex flex-col min-w-0 bg-white">
+        <header className="h-16 border-b border-gray-200 flex items-center bg-gray-50 shrink-0">
+          <SidebarTrigger className="text-gray-500 hover:text-gray-900 pl-4" />
+        </header>
+        <div className="flex-1 overflow-auto">
+          {children}
         </div>
-
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">
-              {session.user?.name?.[0] || "U"}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {session.user?.name}
-              </p>
-              <p className="text-xs text-gray-500 truncate">
-                {session.user ? formatRole(session.user.role) : ""}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="p-4 border-t border-gray-200">
-          <div className="mb-4">
-              <LogoutButton />
-          </div>
-        </div>
-      </aside>
-
-      {/* MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-y-auto p-8">
-        {children}
       </main>
-    </div>
+    </SidebarProvider>
   );
 }
