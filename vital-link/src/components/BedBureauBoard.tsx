@@ -131,22 +131,24 @@ export default function BedBureauBoard({
   initialPatients,
   initialWards,
 }: BedBureauBoardProps) {
-  // 2. Initialize local state.
+  // Initialize local state.
   // We need this so when a drag finishes, we can instantly update the UI (Optimistic Update)
   // before the server finishes saving to the database.
   const [unassignedPatients, setUnassignedPatients] =
     useState<Patient[]>(initialPatients);
+
   const [wards, setWards] = useState<Ward[]>(initialWards);
 
   const [activeId, setActiveId] = useState<string | null>(null);
+
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     setActiveId(null);
-    const { active, over } = event;
 
+    const { active, over } = event;
     // 1. Did they drop it outside a valid bed? Do nothing.
     if (!over) return;
 
