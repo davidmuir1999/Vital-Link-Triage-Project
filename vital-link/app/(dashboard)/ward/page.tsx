@@ -16,12 +16,12 @@ export default async function WardIndexPage() {
       name: "asc",
     },
     include: {
-      _count: {
+      beds: {
         select: {
-          beds: true,
-        },
-      },
-    },
+          status: true,
+        }
+      }
+    }
   });
 
   return (
