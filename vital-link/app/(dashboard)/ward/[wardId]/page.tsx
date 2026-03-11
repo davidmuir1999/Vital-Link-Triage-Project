@@ -1,7 +1,7 @@
 import { prisma } from "@/src/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-
+import BedOptions from "@/src/components/BedOptions";
 interface PageProps {
   params: Promise<{ wardId: string }>;
 }
@@ -9,18 +9,28 @@ interface PageProps {
 export default async function WardPage({ params }: PageProps) {
   const { wardId } = await params;
 
-  const ward = await prisma.ward.findUnique({
-    where: {
-      id: wardId,
-    },
-    include: {
-      beds: {
-        orderBy: {
-          label: "asc",
+ const ward = await prisma.ward.findUnique({
+  where: {
+    id: wardId,
+  },
+  include: {
+    beds: {
+      orderBy: {
+        label: "asc",
+      },
+      include: {
+        patient: {
+          include: {
+            history: {
+              orderBy: { timestamp: "desc" },
+              include: { author: true },
+            },
+          },
         },
       },
     },
-  });
+  },
+});
 
   if (!ward) {
     notFound();
@@ -45,7 +55,7 @@ export default async function WardPage({ params }: PageProps) {
       </div>
 
       {/* BEDS GRID */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {ward.beds.map((bed) => (
           <div
             key={bed.id}
@@ -71,12 +81,12 @@ export default async function WardPage({ params }: PageProps) {
 
             <div className="text-xs font-mono text-gray-400">{bed.status}</div>
 
-            {/* If occupied, we will eventually show patient name here */}
             {bed.status === "OCCUPIED" && (
               <div className="mt-2 text-xs font-medium text-gray-900 bg-red-100 px-2 py-1 rounded inline-block">
                 Patient Occupied
               </div>
             )}
+            {bed.status === "OCCUPIED" && <BedOptions bed = {bed} />}
           </div>
         ))}
       </div>

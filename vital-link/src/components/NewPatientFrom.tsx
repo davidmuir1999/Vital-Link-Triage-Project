@@ -70,8 +70,6 @@ export default function NewPatientForm() {
     setIsSubmitting(false);
 
     if (result?.error) {
-      // Handle server-side errors (e.g. database offline)
-      console.error(result.error);
       toast.error("Failed to save patient. Please try again.");
     } else {
       toast.success("Patient Admitted");
