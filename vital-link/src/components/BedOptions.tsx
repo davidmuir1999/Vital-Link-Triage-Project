@@ -26,7 +26,7 @@ export default function BedOptions({ bed }: { bed: any }) {
 
   return (
     <Dialog>
-      <div className="text-gray-400 absolute bottom-2 right-2 flex gap-2 z-10">
+      <div className="text-gray-400 flex gap-2 z-10">
         <DialogTrigger asChild>
           <button className="hover:text-black hover:bg-gray-100 p-1 rounded transition duration-200">
             <Maximize2 className="w-4 h-4" />
