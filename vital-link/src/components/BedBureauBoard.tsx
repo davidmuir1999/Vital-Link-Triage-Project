@@ -1,6 +1,7 @@
 "use client";
 
 import { assignBed } from "../actions/bed-managment";
+import { sortBedsByLabel } from "../lib/helperFunctions/sortingBedsByLabel";
 import { useState } from "react";
 import {
   useDraggable,
@@ -22,12 +23,11 @@ interface Patient {
   complaintCategory: string[];
 }
 
-// We need a nested type for the Ward because it includes Beds, and Beds can include a Patient.
 interface Bed {
   id: string;
   label: string;
   status: "AVAILABLE" | "OCCUPIED" | "CLEANING_REQUIRED" | "MAINTENANCE";
-  patient?: Patient | null; // The bed might be empty
+  patient?: Patient | null;
 }
 
 interface Ward {
@@ -42,11 +42,10 @@ interface BedBureauBoardProps {
   initialWards: Ward[];
 }
 
-// --- MINI COMPONENT 1: The Draggable Patient Card ---
 function DraggablePatient({ patient }: { patient: Patient }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `patient-${patient.id}`, // Unique ID for the draggable
-    data: { patient }, // We pass the whole patient object so we know WHO is being dragged
+    id: `patient-${patient.id}`,
+    data: { patient },
   });
 
   return (
@@ -83,21 +82,20 @@ function DraggablePatient({ patient }: { patient: Patient }) {
   );
 }
 
-// --- MINI COMPONENT 2: The Droppable Bed ---
 function DroppableBed({ bed }: { bed: Bed }) {
   const isAvailable = bed.status === "AVAILABLE";
 
   const { isOver, setNodeRef } = useDroppable({
-    id: `bed-${bed.id}`, 
-    data: { bedId: bed.id }, 
-    disabled: !isAvailable, 
+    id: `bed-${bed.id}`,
+    data: { bedId: bed.id },
+    disabled: !isAvailable,
   });
 
   const {
     attributes,
     listeners,
-    setNodeRef : setDragRef,
-    isDragging
+    setNodeRef: setDragRef,
+    isDragging,
   } = useDraggable({
     id: `patient-${bed.patient?.id}`,
     data: { patient: bed.patient, sourceBedId: bed.id },
@@ -109,11 +107,13 @@ function DroppableBed({ bed }: { bed: Bed }) {
       ref={setNodeRef}
       className={`border-2 border-dashed rounded p-3 h-24 flex flex-col justify-center items-center text-center transition-all ${
         isOver && isAvailable
-          ? "bg-blue-100 border-blue-500 scale-105 shadow-inner" 
+          ? "bg-blue-100 border-blue-500 scale-105 shadow-inner"
           : isAvailable
           ? "bg-green-50 border-green-300 hover:bg-green-100"
           : bed.status === "OCCUPIED"
           ? "bg-red-50 border-red-300"
+          : bed.status === "CLEANING_REQUIRED"
+          ? "bg-yellow-50 border-yellow-400"
           : "bg-gray-100 border-gray-300 opacity-60"
       }`}
     >
@@ -124,7 +124,14 @@ function DroppableBed({ bed }: { bed: Bed }) {
       {isAvailable ? (
         <span className="text-sm font-medium text-green-700">Empty</span>
       ) : bed.status === "OCCUPIED" && bed.patient ? (
-        <div ref={setDragRef} {...listeners} {...attributes} className={`text-sm w-full flex flex-col items-center justify-center cursor-grab ${isDragging ? "opacity-30" : ""}`}>
+        <div
+          ref={setDragRef}
+          {...listeners}
+          {...attributes}
+          className={`text-sm w-full h-full flex-1 flex flex-col items-center justify-center cursor-grab ${
+            isDragging ? "opacity-30" : ""
+          }`}
+        >
           <p className="font-bold text-red-800">{bed.patient.lastName}</p>
           <p className="text-xs text-red-600">NEWS: {bed.patient.news2Score}</p>
         </div>
@@ -153,14 +160,14 @@ export default function BedBureauBoard({
 
   const handleDragStart = (event: DragStartEvent) => {
     const patientData = event.active.data.current?.patient;
-    if (patientData)setActivePatient(patientData);
+    if (patientData) setActivePatient(patientData);
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     setActivePatient(null);
     const { active, over } = event;
-    
-    if (!over) return; // Dropped in invalid space
+
+    if (!over) return;
 
     const targetBedId = (over.id as string).replace("bed-", "");
     const draggedPatient = active.data.current?.patient as Patient;
@@ -168,20 +175,18 @@ export default function BedBureauBoard({
 
     if (!draggedPatient) return;
 
-    // --- OPTIMISTIC UI UPDATE ---
+    const previousWardsSnapshot = [...wards];
+    const previousUnassignedSnapshot = [...unassignedPatients];
 
     if (sourceBedId) {
-      // SCENARIO A: BED-TO-BED TRANSFER
       setWards((prevWards) =>
         prevWards.map((ward) => ({
           ...ward,
           beds: ward.beds.map((bed) => {
             if (bed.id === sourceBedId) {
-              // Empty the old bed and mark for cleaning
               return { ...bed, status: "CLEANING_REQUIRED", patient: null };
             }
             if (bed.id === targetBedId) {
-              // Fill the new bed
               return { ...bed, status: "OCCUPIED", patient: draggedPatient };
             }
             return bed;
@@ -189,9 +194,9 @@ export default function BedBureauBoard({
         }))
       );
     } else {
-      // SCENARIO B: TRIAGE-TO-BED ADMISSION (Your existing code)
-      setUnassignedPatients((prev) => prev.filter((p) => p.id !== draggedPatient.id));
-      
+      setUnassignedPatients((prev) =>
+        prev.filter((p) => p.id !== draggedPatient.id)
+      );
       setWards((prevWards) =>
         prevWards.map((ward) => ({
           ...ward,
@@ -204,30 +209,27 @@ export default function BedBureauBoard({
       );
     }
 
-    // --- SERVER TRANSACTION ---
     try {
-      // Note: Make sure your assignBed server action can handle 
-      // setting the old bed to CLEANING_REQUIRED if sourceBedId exists!
       const result = await assignBed(draggedPatient.id, targetBedId);
       if (result.error) throw new Error(result.error);
       toast.success("Patient moved successfully");
     } catch (error) {
-      console.error(error);
-      toast.error("Database failed to update. Refreshing board.");
+      setWards(previousWardsSnapshot);
+      setUnassignedPatients(previousUnassignedSnapshot);
+      toast.error(
+        "Database update failed. Patient returned to original position."
+      );
     }
   };
 
   return (
-    // 3. The Main Layout Grid
     <div className="flex h-full gap-6">
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        {/* --- COLUMN 1: THE TRIAGE QUEUE (Draggable Sources) --- */}
         <div className="w-1/3 bg-gray-50 border rounded-lg p-4 flex flex-col">
           <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
             Triage Queue ({unassignedPatients.length})
           </h2>
 
-          {/* The list of patients waiting for beds */}
           <div className="flex-1 overflow-y-auto space-y-3">
             {unassignedPatients.length === 0 ? (
               <p className="text-gray-500 text-sm italic text-center mt-10">
@@ -235,46 +237,43 @@ export default function BedBureauBoard({
               </p>
             ) : (
               unassignedPatients.map((patient) => (
-                // 4. The Patient Card (Future Draggable)
                 <DraggablePatient key={patient.id} patient={patient} />
               ))
             )}
           </div>
         </div>
-        {/* --- COLUMN 2: THE WARD VIEW (Droppable Targets) --- */}
         <div className="w-2/3 bg-white border rounded-lg p-4 overflow-y-auto">
           <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
             Hospital Capacity
           </h2>
 
           <div className="space-y-6">
-            {wards.map((ward) => (
-              <div key={ward.id} className="border rounded bg-gray-50 p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-lg text-gray-700">
-                    {ward.name}
-                  </h3>
-                  <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                    {ward.type}
-                  </span>
-                </div>
+            {wards.map((ward) => {
+              const sortedBeds = sortBedsByLabel(ward.beds);
+              return (
+                <div key={ward.id} className="border rounded bg-gray-50 p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-lg text-gray-700">
+                      {ward.name}
+                    </h3>
+                    <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                      {ward.type}
+                    </span>
+                  </div>
 
-                {/* The Grid of Beds within the Ward */}
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                  {ward.beds.map((bed) => (
-                    // 5. The Bed Card (Future Droppable)
-                    <DroppableBed key={bed.id} bed={bed} />
-                  ))}
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                    {sortedBeds.map((bed) => (
+                      <DroppableBed key={bed.id} bed={bed} />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
-        {/* THE FLYING CLONE */}
         <DragOverlay>
           {activePatient ? (
-            // We render a static copy of the card here. It has no drag hooks, it just looks pretty.
-            <div className="bg-white border-2 border-blue-500 p-3 rounded shadow-2xl scale-105 cursor-grabbing rotate-3">
+            <div className="bg-white border-2 border-blue-500 p-3 rounded shadow-2xl scale-105 cursor-grabbing rotate-3 w-70">
               <div className="flex justify-between items-start">
                 <div>
                   <p className="font-semibold text-gray-900">

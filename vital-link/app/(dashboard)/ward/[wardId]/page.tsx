@@ -2,6 +2,7 @@ import { prisma } from "@/src/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import BedOptions from "@/src/components/BedOptions";
+import { sortBedsByLabel } from "@/src/lib/helperFunctions/sortingBedsByLabel";
 interface PageProps {
   params: Promise<{ wardId: string }>;
 }
@@ -36,8 +37,10 @@ export default async function WardPage({ params }: PageProps) {
     notFound();
   }
 
+  const sortedBeds = sortBedsByLabel(ward.beds);
+
   return (
-    <div className="space-y-6 h-screen">
+    <div className="p-6 space-y-8">
       {/* HEADER & BACK BUTTON */}
       <div className="flex items-center justify-between">
         <div>
@@ -56,7 +59,7 @@ export default async function WardPage({ params }: PageProps) {
 
       {/* BEDS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {ward.beds.map((bed) => (
+        {sortedBeds.map((bed) => (
           <div
             key={bed.id}
             className={`
@@ -64,7 +67,11 @@ export default async function WardPage({ params }: PageProps) {
                   ${
                     bed.status === "AVAILABLE"
                       ? "border-green-100 bg-green-50 hover:border-green-300"
-                      : "border-red-100 bg-white hover:border-red-300"
+                      : bed.status === "CLEANING_REQUIRED"
+                      ? "border-yellow-100 bg-yellow-50 hover:border-yellow-400"
+                      : bed.status === "OCCUPIED"
+                      ? "border-red-100 bg-white hover:border-red-300"
+                      : "bg-gray-100 border-gray-300"
                   }
                 `}
           >
@@ -73,7 +80,13 @@ export default async function WardPage({ params }: PageProps) {
 
               <span
                 className={`h-2.5 w-2.5 rounded-full ${
-                  bed.status === "AVAILABLE" ? "bg-green-500" : "bg-red-500"
+                  bed.status === "AVAILABLE"
+                    ? "bg-green-500"
+                    : bed.status === "CLEANING_REQUIRED"
+                    ? "bg-yellow-500"
+                    : bed.status === "OCCUPIED"
+                    ? "bg-red-500"
+                    : "bg-gray-500"
                 }`}
               />
             </div>
