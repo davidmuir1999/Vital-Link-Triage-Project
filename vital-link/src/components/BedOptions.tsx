@@ -1,5 +1,6 @@
 "use client";
 
+import { Prisma } from "@prisma/client";
 import { Maximize2, EllipsisVertical } from "lucide-react";
 import {
   Dialog,
@@ -19,7 +20,19 @@ import {
 } from "./ui/dropdown-menu";
 import ClinicalNotesFeed from "./ClinicalNotesFeed";
 
-export default function BedOptions({ bed }: { bed: any }) {
+type BedWithPatientData = Prisma.BedGetPayload<{
+  include: {
+    patient: {
+      include: {
+        history: {
+          include: { author: true };
+        }
+      }
+    }
+  };
+}>;
+
+export default function BedOptions({ bed }: { bed: BedWithPatientData }) {
   const patient = bed.patient;
 
   if (!patient) return null;
