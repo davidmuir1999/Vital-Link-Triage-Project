@@ -85,13 +85,23 @@ function DraggablePatient({ patient }: { patient: Patient }) {
 
 // --- MINI COMPONENT 2: The Droppable Bed ---
 function DroppableBed({ bed }: { bed: Bed }) {
-  // We only want to allow dropping if the bed is actually available
   const isAvailable = bed.status === "AVAILABLE";
 
   const { isOver, setNodeRef } = useDroppable({
-    id: `bed-${bed.id}`, // Unique ID for the droppable zone
-    data: { bedId: bed.id }, // So we know WHERE they were dropped
-    disabled: !isAvailable, // Prevent dropping on occupied/dirty beds
+    id: `bed-${bed.id}`, 
+    data: { bedId: bed.id }, 
+    disabled: !isAvailable, 
+  });
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef : setDragRef,
+    isDragging
+  } = useDraggable({
+    id: `patient-${bed.patient?.id}`,
+    data: { patient: bed.patient, sourceBedId: bed.id },
+    disabled: !bed.patient,
   });
 
   return (
@@ -99,7 +109,7 @@ function DroppableBed({ bed }: { bed: Bed }) {
       ref={setNodeRef}
       className={`border-2 border-dashed rounded p-3 h-24 flex flex-col justify-center items-center text-center transition-all ${
         isOver && isAvailable
-          ? "bg-blue-100 border-blue-500 scale-105 shadow-inner" // Highlight when hovering
+          ? "bg-blue-100 border-blue-500 scale-105 shadow-inner" 
           : isAvailable
           ? "bg-green-50 border-green-300 hover:bg-green-100"
           : bed.status === "OCCUPIED"
@@ -114,7 +124,7 @@ function DroppableBed({ bed }: { bed: Bed }) {
       {isAvailable ? (
         <span className="text-sm font-medium text-green-700">Empty</span>
       ) : bed.status === "OCCUPIED" && bed.patient ? (
-        <div className="text-sm">
+        <div ref={setDragRef} {...listeners} {...attributes} className={`text-sm w-full flex flex-col items-center justify-center cursor-grab ${isDragging ? "opacity-30" : ""}`}>
           <p className="font-bold text-red-800">{bed.patient.lastName}</p>
           <p className="text-xs text-red-600">NEWS: {bed.patient.news2Score}</p>
         </div>
@@ -139,61 +149,73 @@ export default function BedBureauBoard({
 
   const [wards, setWards] = useState<Ward[]>(initialWards);
 
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activePatient, setActivePatient] = useState<Patient | null>(null);
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
+    const patientData = event.active.data.current?.patient;
+    if (patientData)setActivePatient(patientData);
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
-    setActiveId(null);
-
+    setActivePatient(null);
     const { active, over } = event;
-    // 1. Did they drop it outside a valid bed? Do nothing.
-    if (!over) return;
+    
+    if (!over) return; // Dropped in invalid space
 
-    // 2. Extract the raw IDs from the dnd-kit string IDs
-    const patientId = (active.id as string).replace("patient-", "");
-    const bedId = (over.id as string).replace("bed-", "");
+    const targetBedId = (over.id as string).replace("bed-", "");
+    const draggedPatient = active.data.current?.patient as Patient;
+    const sourceBedId = active.data.current?.sourceBedId as string | undefined;
 
-    // 3. Find the patient object we are dragging
-    const draggedPatient = unassignedPatients.find((p) => p.id === patientId);
     if (!draggedPatient) return;
 
     // --- OPTIMISTIC UI UPDATE ---
 
-    // A. Remove patient from the triage queue
-    setUnassignedPatients((prev) => prev.filter((p) => p.id !== patientId));
-
-    // B. Place patient in the correct bed inside the wards state
-    setWards((prevWards) =>
-      prevWards.map((ward) => ({
-        ...ward,
-        beds: ward.beds.map((bed) =>
-          bed.id === bedId
-            ? { ...bed, status: "OCCUPIED", patient: draggedPatient }
-            : bed
-        ),
-      }))
-    );
+    if (sourceBedId) {
+      // SCENARIO A: BED-TO-BED TRANSFER
+      setWards((prevWards) =>
+        prevWards.map((ward) => ({
+          ...ward,
+          beds: ward.beds.map((bed) => {
+            if (bed.id === sourceBedId) {
+              // Empty the old bed and mark for cleaning
+              return { ...bed, status: "CLEANING_REQUIRED", patient: null };
+            }
+            if (bed.id === targetBedId) {
+              // Fill the new bed
+              return { ...bed, status: "OCCUPIED", patient: draggedPatient };
+            }
+            return bed;
+          }),
+        }))
+      );
+    } else {
+      // SCENARIO B: TRIAGE-TO-BED ADMISSION (Your existing code)
+      setUnassignedPatients((prev) => prev.filter((p) => p.id !== draggedPatient.id));
+      
+      setWards((prevWards) =>
+        prevWards.map((ward) => ({
+          ...ward,
+          beds: ward.beds.map((bed) =>
+            bed.id === targetBedId
+              ? { ...bed, status: "OCCUPIED", patient: draggedPatient }
+              : bed
+          ),
+        }))
+      );
+    }
 
     // --- SERVER TRANSACTION ---
-
     try {
-      const result = await assignBed(patientId, bedId);
+      // Note: Make sure your assignBed server action can handle 
+      // setting the old bed to CLEANING_REQUIRED if sourceBedId exists!
+      const result = await assignBed(draggedPatient.id, targetBedId);
       if (result.error) throw new Error(result.error);
-
-      console.log(`Successfully assigned patient ${patientId} to bed ${bedId}`);
-      toast.success("Bed assigned successfully");
+      toast.success("Patient moved successfully");
     } catch (error) {
       console.error(error);
       toast.error("Database failed to update. Refreshing board.");
     }
   };
-
-  const activePatient = activeId
-    ? unassignedPatients.find((p) => `patient-${p.id}` === activeId)
-    : null;
 
   return (
     // 3. The Main Layout Grid
