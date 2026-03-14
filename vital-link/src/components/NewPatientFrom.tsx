@@ -25,7 +25,6 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Checkbox } from "./ui/checkbox";
-// import { createPatient } from "@/app/actions/triage"
 import { useState } from "react";
 import { Spinner } from "./ui/spinner";
 import { toast } from "sonner";
@@ -34,7 +33,6 @@ export default function NewPatientForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 1. Initialize Form with Zod Resolver
   const form = useForm<
     z.input<typeof TriageSchema>,
     any,
@@ -61,7 +59,6 @@ export default function NewPatientForm() {
     },
   });
 
-  // 2. Handle Submission
   async function onSubmit(data: z.output<typeof TriageSchema>) {
     setIsSubmitting(true);
 
@@ -110,7 +107,6 @@ export default function NewPatientForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* --- SECTION 1: DEMOGRAPHICS --- */}
         <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
           <h3 className="font-medium text-gray-900">Patient Demographics</h3>
 
@@ -211,7 +207,6 @@ export default function NewPatientForm() {
           </div>
         </div>
 
-        {/* --- SECTION 2: CLINICAL VITALS --- */}
         <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
           <div className="pb-4">
             <h3 className="font-medium text-blue-900 m-0">
@@ -383,7 +378,6 @@ export default function NewPatientForm() {
               )}
             />
           </div>
-          {/* --- LIVE SCORE BANNER --- */}
           <div
             className={`mt-6 p-4 rounded-lg flex items-center justify-between border-2 ${
               scoreColor.includes("red")
@@ -408,9 +402,7 @@ export default function NewPatientForm() {
         <div className="space-y-4">
           <FormLabel>Presenting Complaints (Select all that apply)</FormLabel>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-4 border rounded-md h-64 overflow-y-auto bg-gray-50">
-            {/* We map over an array of your Enum values. 
-      You can add all 30+ of them here, or import the list from a constants file. 
-    */}
+
             {[
               "CHEST_PAIN",
               "PALPITATIONS",
