@@ -6,7 +6,6 @@ import { CheckCircle } from "lucide-react";
 import { bedCleaned } from "../actions/bed-cleaned";
 import { toast } from "sonner";
 
-// FIX 3: Use Prisma to generate the exact type based on our query
 type WardWithDirtyBeds = Prisma.WardGetPayload<{
   include: {
     beds: {
