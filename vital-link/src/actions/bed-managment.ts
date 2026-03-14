@@ -4,7 +4,6 @@ import { prisma } from "@/src/lib/db";
 import { revalidatePath } from "next/cache";
 
 export async function assignBed(patientId: string, bedId: string) {
-  // 1. Verify target bed is available (Don't trust the client!)
   const targetBed = await prisma.bed.findUnique({ where: { id: bedId } });
   
   if (!targetBed || targetBed.status !== "AVAILABLE") {
