@@ -2,6 +2,7 @@
 
 import { assignBed } from "../actions/bed-managment";
 import { sortBedsByLabel } from "../lib/helperFunctions/sortingBedsByLabel";
+import BreachClock from "./BreachClock";
 import { useState } from "react";
 import {
   useDraggable,
@@ -13,14 +14,13 @@ import {
 } from "@dnd-kit/core";
 import { toast } from "sonner";
 
-// 1. Define the Types based on your Prisma Schema
-// We are only picking the fields we need for the UI right now to keep it clean.
 interface Patient {
   id: string;
   firstName: string;
   lastName: string;
   news2Score: number;
   complaintCategory: string[];
+  admissionDate: Date;
 }
 
 interface Bed {
@@ -53,30 +53,38 @@ function DraggablePatient({ patient }: { patient: Patient }) {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`bg-white border p-3 rounded shadow-sm cursor-grab transition-colors relative ${
-        isDragging ? "opacity-40 border-dashed" : "hover:border-blue-500"
+      className={`bg-white border p-3 rounded-lg shadow-sm cursor-grab transition-all relative ${
+        isDragging
+          ? "opacity-40 border-dashed"
+          : "hover:border-blue-500 hover:shadow-md"
       }`}
     >
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="font-semibold text-gray-900">
+      <div className="flex flex-col gap-2">
+        <div className="w-full">
+          <p className="font-semibold text-gray-900 truncate">
             {patient.lastName}, {patient.firstName}
           </p>
-          <p className="text-xs text-gray-500 truncate w-40">
+          <p className="text-xs text-gray-500 truncate mt-0.5">
             {patient.complaintCategory.join(", ").replace(/_/g, " ")}
           </p>
         </div>
-        <span
-          className={`text-xs font-bold px-2 py-1 rounded ${
-            patient.news2Score >= 7
-              ? "bg-red-100 text-red-800"
-              : patient.news2Score >= 5
-              ? "bg-orange-100 text-orange-800"
-              : "bg-green-100 text-green-800"
-          }`}
-        >
-          NEWS: {patient.news2Score}
-        </span>
+
+        <div className="flex flex-wrap justify-between items-center pt-2 mt-1 border-t border-gray-100 gap-2">
+          <span
+            className={`whitespace-nowrap text-xs font-bold px-2 py-0.5 rounded ${
+              patient.news2Score >= 7
+                ? "bg-red-100 text-red-800"
+                : patient.news2Score >= 5
+                ? "bg-orange-100 text-orange-800"
+                : "bg-green-100 text-green-800"
+            }`}
+          >
+            NEWS: {patient.news2Score}
+          </span>
+          <div className="bg-gray-50 px-2 py-0.5 border rounded whitespace-nowrap">
+            <BreachClock admissionDate={patient.admissionDate} />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -148,9 +156,6 @@ export default function BedBureauBoard({
   initialPatients,
   initialWards,
 }: BedBureauBoardProps) {
-  // Initialize local state.
-  // We need this so when a drag finishes, we can instantly update the UI (Optimistic Update)
-  // before the server finishes saving to the database.
   const [unassignedPatients, setUnassignedPatients] =
     useState<Patient[]>(initialPatients);
 

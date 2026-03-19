@@ -49,7 +49,6 @@ export function AppSidebar({session}: {session: Session | null}) {
         </div>
       </SidebarHeader>
 
-      {/* --- CONTENT: Navigation Links --- */}
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Operations</SidebarGroupLabel>
