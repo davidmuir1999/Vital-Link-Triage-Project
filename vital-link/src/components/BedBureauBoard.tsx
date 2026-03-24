@@ -227,6 +227,31 @@ export default function BedBureauBoard({
     }
   };
 
+  const sortedTriageQueue = [...unassignedPatients].sort((a, b) => {
+    // STEP 1: Calculate time left for 'a' and 'b'
+    const now = new Date().getTime();
+    const fourHoursInMs = 4 * 60 * 60 * 1000;
+    const thirtyMinutesInMs = 30 * 60 * 1000;
+
+    const aTimeLeft = (new Date(a.admissionDate).getTime() + fourHoursInMs) - now;
+    const bTimeLeft = (new Date(b.admissionDate).getTime() + fourHoursInMs) - now;
+
+    const aIsBreaching = aTimeLeft <= thirtyMinutesInMs;
+    const bIsBreaching = bTimeLeft <= thirtyMinutesInMs;
+
+    // RULE 1: The 30-Minute Override
+    if (aIsBreaching && !bIsBreaching) return -1;
+    if (!aIsBreaching && bIsBreaching) return 1;
+
+    // RULE 2: NEWS2 Score Tie-Breaker
+    if (a.news2Score !== b.news2Score) {
+      return b.news2Score - a.news2Score;
+   }
+
+   // RULE 3: FIFO (First In, First Out)
+   return aTimeLeft - bTimeLeft;
+  })
+
   return (
     <div className="flex h-full gap-6">
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -241,7 +266,7 @@ export default function BedBureauBoard({
                 No patients waiting.
               </p>
             ) : (
-              unassignedPatients.map((patient) => (
+              sortedTriageQueue.map((patient) => (
                 <DraggablePatient key={patient.id} patient={patient} />
               ))
             )}
