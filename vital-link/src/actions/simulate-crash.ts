@@ -2,7 +2,7 @@
 
 import { prisma } from "../lib/db";
 import { revalidatePath } from "next/cache";
-import { success, z } from "zod";
+import { z } from "zod";
 
 const simulateCrashSchema = z.object({
   patientId: z.string().min(1, "Patient ID is required"),

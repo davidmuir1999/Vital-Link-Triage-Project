@@ -4,6 +4,7 @@
         "nextauth",
         "nums",
         "offcanvas",
-        "sonner"
+        "sonner",
+        "supabase"
     ]
 }

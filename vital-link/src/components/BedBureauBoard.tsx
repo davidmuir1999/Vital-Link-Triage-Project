@@ -1,9 +1,12 @@
 "use client";
 
-import { assignBed } from "../actions/bed-managment";
+import { assignBed } from "../actions/bed-management";
 import { sortBedsByLabel } from "../lib/helperFunctions/sortingBedsByLabel";
 import BreachClock from "./BreachClock";
-import { useState } from "react";
+import { simulatePatientCrash } from "../actions/simulate-crash";
+import { useState, useEffect, useRef } from "react";
+import { createClient } from "@supabase/supabase-js";
+import { Activity } from "lucide-react";
 import {
   useDraggable,
   useDroppable,
@@ -93,6 +96,8 @@ function DraggablePatient({ patient }: { patient: Patient }) {
 function DroppableBed({ bed }: { bed: Bed }) {
   const isAvailable = bed.status === "AVAILABLE";
 
+  const isCritical = bed.patient && bed.patient.news2Score >= 7;
+
   const { isOver, setNodeRef } = useDroppable({
     id: `bed-${bed.id}`,
     data: { bedId: bed.id },
@@ -119,13 +124,15 @@ function DroppableBed({ bed }: { bed: Bed }) {
           : isAvailable
           ? "bg-green-50 border-green-300 hover:bg-green-100"
           : bed.status === "OCCUPIED"
-          ? "bg-red-50 border-red-300"
+          ? isCritical
+            ? "bg-red-600 border-red-800 animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.6)]"
+            : "bg-slate-50 border-slate-300"
           : bed.status === "CLEANING_REQUIRED"
           ? "bg-yellow-50 border-yellow-400"
           : "bg-gray-100 border-gray-300 opacity-60"
       }`}
     >
-      <span className="text-xs font-mono font-bold text-gray-500 mb-1">
+      <span className={`text-xs font-mono font-bold mb-1 ${isCritical ? 'text-red-100' : 'text-gray-500'}`}>
         {bed.label}
       </span>
 
@@ -140,8 +147,8 @@ function DroppableBed({ bed }: { bed: Bed }) {
             isDragging ? "opacity-30" : ""
           }`}
         >
-          <p className="font-bold text-red-800">{bed.patient.lastName}</p>
-          <p className="text-xs text-red-600">NEWS: {bed.patient.news2Score}</p>
+          <p className={`font-bold ${isCritical ? 'text-white' : 'text-slate-800'}`}>{bed.patient.lastName}</p>
+          <p className={`text-xs ${isCritical ? 'text-red-200 font-bold' : 'text-slate-500'}`}>NEWS: {bed.patient.news2Score}</p>
         </div>
       ) : (
         <span className="text-xs text-gray-500 font-medium">
@@ -158,6 +165,8 @@ export default function BedBureauBoard({
 }: BedBureauBoardProps) {
   const [unassignedPatients, setUnassignedPatients] =
     useState<Patient[]>(initialPatients);
+
+  const [isMounted, setIsMounted] = useState(false);
 
   const [wards, setWards] = useState<Ward[]>(initialWards);
 
@@ -233,8 +242,8 @@ export default function BedBureauBoard({
     const fourHoursInMs = 4 * 60 * 60 * 1000;
     const thirtyMinutesInMs = 30 * 60 * 1000;
 
-    const aTimeLeft = (new Date(a.admissionDate).getTime() + fourHoursInMs) - now;
-    const bTimeLeft = (new Date(b.admissionDate).getTime() + fourHoursInMs) - now;
+    const aTimeLeft = new Date(a.admissionDate).getTime() + fourHoursInMs - now;
+    const bTimeLeft = new Date(b.admissionDate).getTime() + fourHoursInMs - now;
 
     const aIsBreaching = aTimeLeft <= thirtyMinutesInMs;
     const bIsBreaching = bTimeLeft <= thirtyMinutesInMs;
@@ -246,11 +255,132 @@ export default function BedBureauBoard({
     // RULE 2: NEWS2 Score Tie-Breaker
     if (a.news2Score !== b.news2Score) {
       return b.news2Score - a.news2Score;
-   }
+    }
 
-   // RULE 3: FIFO (First In, First Out)
-   return aTimeLeft - bTimeLeft;
-  })
+    // RULE 3: FIFO (First In, First Out)
+    return aTimeLeft - bTimeLeft;
+  });
+
+  useEffect(() => {
+    // 1. Initialize the Supabase Client
+    // Make sure these match your .env.local variables perfectly!
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    // 2. Subscribe to changes on the Patient table
+    const channel = supabase
+      .channel("hospital-vitals")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "*",
+        },
+        (payload) => {
+          console.log("incoming websocket payload", payload);
+          // payload.new contains the freshly updated database row!
+          if (payload.table.toLocaleLowerCase() === "patient") {
+            const updatedPatient = payload.new;
+
+            console.log("WebSocket caught a vital sign crash!", updatedPatient);
+
+            // 3. Update the React State to trigger a UI re-render
+            setWards((currentWards) => {
+              // We map through the complex nested state to find the right bed
+              return currentWards.map((ward) => ({
+                ...ward,
+                beds: ward.beds.map((bed) => {
+                  // If this bed holds the patient that just crashed...
+                  if (bed.patient && bed.patient?.id === updatedPatient.id) {
+                    return {
+                      ...bed,
+                      patient: {
+                        ...bed.patient,
+                        news2Score: updatedPatient.news2Score,
+                        heartRate: updatedPatient.heartRate,
+                      },
+                    };
+                  }
+                  return bed;
+                }),
+              }));
+            });
+
+            // Optional: Fire a toast for the Site Manager
+            if (updatedPatient.news2Score >= 7) {
+              toast.error(
+                `CRITICAL: Patient ${updatedPatient.lastName} is deteriorating!`
+              );
+            }
+          }
+        }
+      )
+      .subscribe((status, err) => {
+        console.log("📡 Supabase Connection Status:", status);
+        if (err) console.error("📡 Supabase Connection Error:", err);
+      });
+
+    // 4. Cleanup function: Close the WebSocket when the user leaves the page
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const [isSimulating, setIsSimulating] = useState(false);
+  const simulationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const toggleSimulation = () => {
+    if (isSimulating) {
+      if (simulationIntervalRef.current)
+        clearInterval(simulationIntervalRef.current);
+      setIsSimulating(false);
+      toast.info("Patient simulation halted");
+    } else {
+      setIsSimulating(true);
+      toast.info("God Mode activated. Patient will randomly deteriorate.");
+
+      simulationIntervalRef.current = setInterval(async () => {
+        const admittedPatients = initialWards
+          .flatMap((ward) => ward.beds)
+          .map((bed) => bed.patient)
+          .filter(Boolean);
+
+        if (admittedPatients.length === 0) return;
+
+        const randomPatient =
+          admittedPatients[Math.floor(Math.random() * admittedPatients.length)];
+
+        if (randomPatient) {
+          console.log(`Simulating crash for ${randomPatient.lastName}`);
+          await simulatePatientCrash(randomPatient.id);
+        }
+      }, 15000);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (simulationIntervalRef.current)
+        clearInterval(simulationIntervalRef.current);
+    };
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-gray-500 font-medium animate-pulse">
+          Loading Operations Board...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full gap-6">
@@ -273,9 +403,23 @@ export default function BedBureauBoard({
           </div>
         </div>
         <div className="w-2/3 bg-white border rounded-lg p-4 overflow-y-auto">
-          <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
-            Hospital Capacity
-          </h2>
+          <div className="flex justify-between items-center border-b pb-2 mb-4">
+            <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
+              Hospital Capacity
+            </h2>
+
+            <button
+              onClick={toggleSimulation}
+              className={`flex items-center gap-2 px-3 py-1.5 text-sm font-bold rounded-md transition-all ${
+                isSimulating
+                  ? "bg-red-100 text-red-700 border border-red-300 animate-pulse"
+                  : "bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200"
+              }`}
+            >
+              <Activity size={16} />
+              {isSimulating ? "SIMULATION ACTIVE" : "God Mode"}
+            </button>
+          </div>
 
           <div className="space-y-6">
             {wards.map((ward) => {
