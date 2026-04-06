@@ -28,6 +28,21 @@ export async function simulatePatientCrash(rawPatientId: string) {
       },
     });
 
+    setTimeout(async () => {
+        try {
+            console.log(`Auto-recovering patient ${patientId}`);
+            await prisma.patient.update ({
+                where: {id : patientId},
+                data: {
+                    heartRate: 75,
+                    news2Score: 2,
+                }
+            });
+        } catch (error) {
+            console.error("Failed to auto-recover patient", error);
+        }
+    },10000);
+
     revalidatePath("/dashboard");
     return { success: true };
   } catch {
