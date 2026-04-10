@@ -2,6 +2,7 @@
 
 import { Prisma } from "@prisma/client";
 import { Maximize2, EllipsisVertical } from "lucide-react";
+import { useTransition } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import ClinicalNotesFeed from "./ClinicalNotesFeed";
+import { toast } from "sonner";
+import { dischargePatient } from "../actions/bed-management";
 
 type BedWithPatientData = Prisma.BedGetPayload<{
   include: {
@@ -26,16 +29,39 @@ type BedWithPatientData = Prisma.BedGetPayload<{
       include: {
         history: {
           include: { author: true };
-        }
-      }
-    }
+        };
+      };
+    };
   };
 }>;
 
 export default function BedOptions({ bed }: { bed: BedWithPatientData }) {
   const patient = bed.patient;
 
+  const [isPending, startTransition] = useTransition();
+
   if (!patient) return null;
+
+  const handleDischarge = () => {
+    if (
+      !window.confirm(
+        `Are you sure you want to discharge ${patient.firstName} ${patient.lastName}?`
+      )
+    )
+      return;
+
+    startTransition(async () => {
+      const result = await dischargePatient(patient.id, bed.id);
+
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(
+          `${patient.firstName} ${patient.lastName} has been discharged.`
+        );
+      }
+    });
+  };
 
   return (
     <Dialog>
@@ -63,8 +89,8 @@ export default function BedOptions({ bed }: { bed: BedWithPatientData }) {
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem className="text-red-600 font-medium cursor-pointer focus:bg-red-50 focus:text-red-700">
-              Discharge Patient
+            <DropdownMenuItem onClick={handleDischarge} disabled={isPending} className={`font-medium cursor-pointer focus:bg-red-50 focus:text-red-700 ${isPending ? "text-gray-400" : "text-red-600"}`}>
+              {isPending ? "Discharging..." : "Discharge Patient"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

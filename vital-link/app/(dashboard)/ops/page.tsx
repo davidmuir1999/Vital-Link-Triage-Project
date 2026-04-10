@@ -3,7 +3,10 @@ import BedBureauBoard from "@/src/components/BedBureauBoard";
 
 export default async function BedBureauPage() {
   const unassignedPatients = await prisma.patient.findMany({
-    where: { bed: null },
+    where: {
+      bed: null,
+      status: "ACTIVE",
+    },
     orderBy: {
       admissionDate: "asc",
     },

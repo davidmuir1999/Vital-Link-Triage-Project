@@ -23,7 +23,6 @@ export async function assignBed(rawPatientId: string, rawBedId: string) {
 
   try {
     await prisma.$transaction(async (tx) => {
-      
       const targetBed = await prisma.bed.findUnique({ where: { id: bedId } });
 
       if (!targetBed || targetBed.status !== "AVAILABLE") {
@@ -53,10 +52,48 @@ export async function assignBed(rawPatientId: string, rawBedId: string) {
       });
     });
 
-    revalidatePath("/dashboard/ops");
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
     console.error("Transaction failed:", error);
     return { error: "Database transaction failed." };
+  }
+}
+
+export async function dischargePatient(rawPatientId: string, rawBedId: string) {
+  const validateFields = bedManagementSchema.safeParse({
+    patientId: rawPatientId,
+    bedId: rawBedId,
+  });
+
+  if (!validateFields.success) {
+    return { error: validateFields.error.message };
+  }
+
+  const { patientId, bedId } = validateFields.data;
+
+  try {
+    await prisma.$transaction([
+      prisma.bed.update({
+        where: { id: bedId },
+        data: {
+          status: "CLEANING_REQUIRED",
+          patient: { disconnect: true },
+        },
+      }),
+      
+      prisma.patient.update({
+        where: {id: patientId},
+        data: {
+          status: "DISCHARGED"
+        }
+      })
+    ]);
+
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("Discharge failed:", error);
+    return { error: "Failed to discharge patient." };
   }
 }

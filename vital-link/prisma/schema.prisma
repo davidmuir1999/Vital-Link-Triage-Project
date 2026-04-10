@@ -110,6 +110,7 @@ model Patient {
   dob              DateTime
   gender           Gender            // Updated to Enum
   nhsNumber        String            @unique
+  status           String            @default("ACTIVE")
   
   complaintDetails String?           // Free text (e.g. "Pain in left arm")
   complaintCategory ComplaintCategory[] // Structured Data (e.g. CHEST_PAIN)
