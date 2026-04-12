@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import BedOptions from "@/src/components/BedOptions";
 import { sortBedsByLabel } from "@/src/lib/helperFunctions/sortingBedsByLabel";
+import { FileText } from "lucide-react";
+
 interface PageProps {
   params: Promise<{ wardId: string }>;
 }
@@ -41,23 +43,31 @@ export default async function WardPage({ params }: PageProps) {
 
   return (
     <div className="p-6 space-y-8">
-      {/* HEADER & BACK BUTTON */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">{ward.name}</h1>
-          <p className="text-gray-500">
+          <p className="text-gray-500 mt-1">
             {ward.type} Ward • {ward.beds.length} Beds Total
           </p>
         </div>
-        <Link
-          href="/ward"
-          className="w-40 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center"
-        >
-          ← Back to List
-        </Link>
+
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/ward/${wardId}/handover`}
+            className="flex items-center gap-2 bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 px-4 py-2 rounded-md font-bold transition-colors shadow-sm"
+          >
+            <FileText size={18} />
+            <span>Handover PDF</span>
+          </Link>
+          <Link
+            href="/ward"
+            className="px-4 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center shadow-sm"
+          >
+            ← Back
+          </Link>
+        </div>
       </div>
 
-      {/* BEDS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {sortedBeds.map((bed) => (
           <div
@@ -130,7 +140,6 @@ export default async function WardPage({ params }: PageProps) {
         ))}
       </div>
 
-      {/* EMPTY STATE (If ward has no beds) */}
       {ward.beds.length === 0 && (
         <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
           <p className="text-gray-500">No beds configured for this ward.</p>
