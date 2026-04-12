@@ -138,8 +138,8 @@ model ClinicalLog {
   timestamp   DateTime @default(now())
   
   // Relation to User (Author)
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
+  authorId    String?
+  author      User?     @relation(fields: [authorId], references: [id])
   
   // Relation to Patient
   patientId   String
