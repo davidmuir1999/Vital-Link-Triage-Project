@@ -8,6 +8,7 @@ import { calculateNEWS2, getRiskColor } from "../lib/calculators/news2";
 import { createPatient } from "../actions/triage";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
+import SelectSearch from "react-select";
 import {
   Form,
   FormControl,
@@ -62,7 +63,12 @@ export default function NewPatientForm() {
   async function onSubmit(data: z.output<typeof TriageSchema>) {
     setIsSubmitting(true);
 
-    const result = await createPatient(data);
+    const sanitizedData = {
+      ...data,
+      nhsNumber: data.nhsNumber.replace(/\s/g, ""),
+    };
+
+    const result = await createPatient(sanitizedData);
 
     setIsSubmitting(false);
 
@@ -107,10 +113,10 @@ export default function NewPatientForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
-          <h3 className="font-medium text-gray-900">Patient Demographics</h3>
+        <div className="space-y-4 p-5 border rounded-xl bg-white shadow-sm">
+          <h3 className="font-semibold text-gray-900">Patient Demographics</h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <FormField
               control={form.control}
               name="firstName"
@@ -146,7 +152,24 @@ export default function NewPatientForm() {
                 <FormItem>
                   <FormLabel>NHS Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="10-digit number" {...field} />
+                    <Input
+                      placeholder="123 456 7890"
+                      {...field}
+                      onChange={(e) => {
+                        // The Masking Logic: Strip letters, limit to 10, add spaces
+                        const rawValue = e.target.value.replace(/\D/g, "");
+                        const formatted =
+                          rawValue.length > 6
+                            ? `${rawValue.slice(0, 3)} ${rawValue.slice(
+                                3,
+                                6
+                              )} ${rawValue.slice(6, 10)}`
+                            : rawValue.length > 3
+                            ? `${rawValue.slice(0, 3)} ${rawValue.slice(3, 6)}`
+                            : rawValue;
+                        field.onChange(formatted);
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -207,23 +230,23 @@ export default function NewPatientForm() {
           </div>
         </div>
 
-        <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
-          <div className="pb-4">
-            <h3 className="font-medium text-blue-900 m-0">
+        <div className="space-y-4 p-5 border border-blue-100 rounded-xl bg-blue-50/50 shadow-sm">
+          <div className="pb-2 border-b border-blue-100">
+            <h3 className="font-semibold text-blue-900 m-0">
               Vital Signs (NEWS2)
             </h3>
-            <span className="text-xs font-mono bg-blue-100 text-blue-800 px-2 py-1 rounded">
+            <span className="text-xs font-mono bg-blue-100 text-blue-800 px-2 py-1 rounded inline-block mt-2">
               Protocol: Adult (16+)
             </span>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-5 pt-2">
             <FormField
               control={form.control}
               name="respiratoryRate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Respiratory Rate (bpm)</FormLabel>
+                  <FormLabel>Resp Rate (bpm)</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -232,27 +255,6 @@ export default function NewPatientForm() {
                     />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="hypercapnicFailure"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center space-x-3 space-y-0 border p-4 rounded-md">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value as boolean}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Use SpO₂ Scale 2</FormLabel>
-                    <p className="text-sm text-gray-500">
-                      Known COPD / Type 2 Respiratory Failure (Target 88-92%)
-                    </p>
-                  </div>
                 </FormItem>
               )}
             />
@@ -262,7 +264,7 @@ export default function NewPatientForm() {
               name="oxygenSat"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Oxygen Saturation (SpO₂)</FormLabel>
+                  <FormLabel>SpO₂ (%)</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -277,31 +279,10 @@ export default function NewPatientForm() {
 
             <FormField
               control={form.control}
-              name="isOnOxygen"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center space-x-3 space-y-0 border p-4 rounded-md">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value as boolean}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Patient is on O₂</FormLabel>
-                    <p className="text-sm text-gray-500">
-                      Check if patient is on Air/O₂
-                    </p>
-                  </div>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="temperature"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Temperature (°C)</FormLabel>
+                  <FormLabel>Temp (°C)</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -319,7 +300,7 @@ export default function NewPatientForm() {
               name="bpSystolic"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Systolic BP (mmHg)</FormLabel>
+                  <FormLabel>Systolic BP</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -337,7 +318,7 @@ export default function NewPatientForm() {
               name="heartRate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Heart Rate (bpm)</FormLabel>
+                  <FormLabel>Heart Rate</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -355,14 +336,14 @@ export default function NewPatientForm() {
               name="consciousness"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Level of Consciousness</FormLabel>
+                  <FormLabel>Consciousness</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select consciousness" />
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="Select level" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -378,116 +359,195 @@ export default function NewPatientForm() {
               )}
             />
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4">
+            <FormField
+              control={form.control}
+              name="hypercapnicFailure"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-3 space-y-0 border border-blue-200 bg-white p-4 rounded-lg shadow-sm hover:border-blue-300 transition-colors cursor-pointer">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value as boolean}
+                      onCheckedChange={field.onChange}
+                      className="data-[state=checked]:bg-blue-600 border-blue-300"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="cursor-pointer font-medium">
+                      Use SpO₂ Scale 2
+                    </FormLabel>
+                    <p className="text-xs text-gray-500">
+                      Known COPD / Type 2 Respiratory Failure (Target 88-92%)
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="isOnOxygen"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-3 space-y-0 border border-blue-200 bg-white p-4 rounded-lg shadow-sm hover:border-blue-300 transition-colors cursor-pointer">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value as boolean}
+                      onCheckedChange={field.onChange}
+                      className="data-[state=checked]:bg-blue-600 border-blue-300"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="cursor-pointer font-medium">
+                      Patient is on O₂
+                    </FormLabel>
+                    <p className="text-xs text-gray-500">
+                      Check if patient is currently receiving Air/O₂ therapy
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
+          </div>
+
           <div
-            className={`mt-6 p-4 rounded-lg flex items-center justify-between border-2 ${
+            className={`mt-6 p-5 rounded-xl flex items-center justify-between border-2 shadow-sm transition-colors ${
               scoreColor.includes("red")
                 ? "border-red-500 bg-red-50"
                 : "border-gray-200 bg-white"
             }`}
           >
             <div>
-              <h3 className="font-bold text-lg">Live NEWS2 Score</h3>
-              <p className="text-sm opacity-80">
+              <h3 className="font-bold text-lg text-gray-900">
+                Live NEWS2 Score
+              </h3>
+              <p className="text-sm text-gray-500">
                 Calculated automatically from vital signs
               </p>
             </div>
             <div
-              className={`text-3xl font-black px-6 py-2 rounded-lg shadow-inner ${scoreColor}`}
+              className={`text-4xl font-black px-6 py-2 rounded-lg shadow-inner ${scoreColor}`}
             >
               {currentScore}
             </div>
           </div>
         </div>
-        {/* --- SECTION 3: COMPLAINT --- */}
-        <div className="space-y-4">
-          <FormLabel>Presenting Complaints (Select all that apply)</FormLabel>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-4 border rounded-md h-64 overflow-y-auto bg-gray-50">
 
-            {[
-              "CHEST_PAIN",
-              "PALPITATIONS",
-              "HYPERTENSION",
-              "CARDIAC_ARREST",
-              "SHORTNESS_OF_BREATH",
-              "ASTHMA_COPD_FLARE",
-              "RESPIRATORY_ARREST",
-              "COUGH_HEMOPTYSIS",
-              "HEADACHE",
-              "SEIZURE",
-              "STROKE_CVA",
-              "LOSS_OF_CONSCIOUSNESS",
-              "CONFUSION_ALTERED_STATE",
-              "DIZZINESS_VERTIGO",
-              "ABDOMINAL_PAIN",
-              "NAUSEA_VOMITING",
-              "GI_BLEED",
-              "DIARRHEA",
-              "TRAUMA_FALL",
-              "TRAUMA_ROAD_ACCIDENT",
-              "TRAUMA_ASSAULT",
-              "BURN",
-              "LACERATION_CUT",
-              "HEAD_INJURY",
-              "FRACTURE_DISLOCATION",
-              "SUICIDAL_IDEATION",
-              "SELF_HARM",
-              "PSYCHOSIS_MANIA",
-              "ANXIETY_PANIC",
-              "AGGRESSIVE_BEHAVIOR",
-              "FEVER_SEPSIS",
-              "ALLERGIC_REACTION",
-              "OVERDOSE_POISONING",
-              "PREGNANCY_COMPLICATION",
-              "GENERAL_MALAISE",
-              "OTHER",
-            ].map((item) => (
-              <FormField
-                key={item}
-                control={form.control}
-                name="complaintCategory"
-                render={({ field }) => {
-                  return (
-                    <FormItem
-                      key={item}
-                      className="flex flex-row items-start space-x-3 space-y-0"
-                    >
-                      <FormControl>
-                        <Checkbox
-                          // 1. Is this specific item in the array? If yes, check the box.
-                          checked={field.value?.includes(item)}
-                          // 2. When clicked, add or remove it from the array
-                          onCheckedChange={(checked) => {
-                            return checked
-                              ? field.onChange([...(field.value || []), item])
-                              : field.onChange(
-                                  field.value?.filter(
-                                    (value: string) => value !== item
-                                  )
-                                );
-                          }}
-                        />
-                      </FormControl>
-                      <FormLabel className="font-normal cursor-pointer">
-                        {/* Makes "CHEST_PAIN" look like "CHEST PAIN" */}
-                        {item.replace(/_/g, " ")}
-                      </FormLabel>
-                    </FormItem>
-                  );
-                }}
-              />
-            ))}
-          </div>
-          <FormMessage />
+        <div className="space-y-5 p-5 border rounded-xl bg-white shadow-sm">
+          <h3 className="font-semibold text-gray-900 mb-2">
+            Clinical Presentation
+          </h3>
+
+          <FormField
+            control={form.control}
+            name="complaintCategory"
+            render={({ field }) => {
+              const complaintOptions = [
+                "CHEST_PAIN",
+                "PALPITATIONS",
+                "HYPERTENSION",
+                "CARDIAC_ARREST",
+                "SHORTNESS_OF_BREATH",
+                "ASTHMA_COPD_FLARE",
+                "RESPIRATORY_ARREST",
+                "COUGH_HEMOPTYSIS",
+                "HEADACHE",
+                "SEIZURE",
+                "STROKE_CVA",
+                "LOSS_OF_CONSCIOUSNESS",
+                "CONFUSION_ALTERED_STATE",
+                "DIZZINESS_VERTIGO",
+                "ABDOMINAL_PAIN",
+                "NAUSEA_VOMITING",
+                "GI_BLEED",
+                "DIARRHEA",
+                "TRAUMA_FALL",
+                "TRAUMA_ROAD_ACCIDENT",
+                "TRAUMA_ASSAULT",
+                "BURN",
+                "LACERATION_CUT",
+                "HEAD_INJURY",
+                "FRACTURE_DISLOCATION",
+                "SUICIDAL_IDEATION",
+                "SELF_HARM",
+                "PSYCHOSIS_MANIA",
+                "ANXIETY_PANIC",
+                "AGGRESSIVE_BEHAVIOR",
+                "FEVER_SEPSIS",
+                "ALLERGIC_REACTION",
+                "OVERDOSE_POISONING",
+                "PREGNANCY_COMPLICATION",
+                "GENERAL_MALAISE",
+                "OTHER",
+              ].map((item) => ({
+                value: item,
+                label: item.replace(/_/g, " "),
+              }));
+
+              const selectedValues =
+                field.value?.map((val: string) =>
+                  complaintOptions.find((opt) => opt.value === val)
+                ) || [];
+
+              return (
+                <FormItem>
+                  <FormLabel>Presenting Complaints</FormLabel>
+                  <FormControl>
+                    <SelectSearch
+                      isMulti
+                      placeholder="Search and select complaints..."
+                      options={complaintOptions}
+                      value={selectedValues}
+                      onChange={(selectedOptions) => {
+                        field.onChange(
+                          selectedOptions
+                            ? selectedOptions.map((opt) => opt?.value)
+                            : []
+                        );
+                      }}
+                      className="text-sm"
+                      styles={{
+                        control: (baseStyles, state) => ({
+                          ...baseStyles,
+                          borderColor: state.isFocused ? "#3b82f6" : "#e5e7eb",
+                          boxShadow: state.isFocused
+                            ? "0 0 0 1px #3b82f6"
+                            : "none",
+                          borderRadius: "0.5rem",
+                          padding: "2px",
+                        }),
+                        multiValue: (baseStyles) => ({
+                          ...baseStyles,
+                          backgroundColor: "#eff6ff",
+                          borderRadius: "6px",
+                        }),
+                        multiValueLabel: (baseStyles) => ({
+                          ...baseStyles,
+                          color: "#1d4ed8",
+                          fontWeight: 500,
+                        }),
+                      }}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-gray-500 mt-1">
+                    You can search and select multiple conditions.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
 
           <FormField
             control={form.control}
             name="complaintDetails"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="pt-2">
                 <FormLabel>Clinical Notes</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Additional context (e.g. 'Patient states pain started 2 hours ago...')"
+                  <textarea
+                    className="flex min-h-25 w-full rounded-lg border border-gray-200 bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Provide additional context (e.g. 'Patient states pain started 2 hours ago. Radiating to left arm.')"
                     {...field}
                   />
                 </FormControl>
@@ -496,9 +556,19 @@ export default function NewPatientForm() {
             )}
           />
         </div>
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting && <Spinner />}
-          Admit to Triage
+
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 text-lg rounded-xl shadow-lg transition-all"
+        >
+          {isSubmitting ? (
+            <span className="flex items-center gap-2">
+              <Spinner className="w-5 h-5 text-white" /> Processing Admission...
+            </span>
+          ) : (
+            "Complete Triage Admission"
+          )}
         </Button>
       </form>
     </Form>

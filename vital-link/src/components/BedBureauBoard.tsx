@@ -6,7 +6,7 @@ import BreachClock from "./BreachClock";
 import { simulatePatientCrash } from "../actions/simulate-crash";
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { Activity } from "lucide-react";
+import { Activity, GripVertical } from "lucide-react";
 import {
   useDraggable,
   useDroppable,
@@ -62,6 +62,9 @@ function DraggablePatient({ patient }: { patient: Patient }) {
           : "hover:border-blue-500 hover:shadow-md"
       }`}
     >
+      <div className="flex items-center justify-center bg-slate-50 border-r border-gray-100 px-1 text-gray-400 hover:text-blue-500 transition-colors">
+        <GripVertical size={16} />
+      </div>
       <div className="flex flex-col gap-2">
         <div className="w-full">
           <p className="font-semibold text-gray-900 truncate">
@@ -120,16 +123,16 @@ function DroppableBed({ bed }: { bed: Bed }) {
       ref={setNodeRef}
       className={`border-2 border-dashed rounded p-3 h-24 flex flex-col justify-center items-center text-center transition-all ${
         isOver && isAvailable
-          ? "bg-blue-100 border-blue-500 scale-105 shadow-inner"
+          ? "bg-blue-100 border-blue-500 scale-105 shadow-inner border-dashed"
           : isAvailable
-          ? "bg-green-50 border-green-300 hover:bg-green-100"
+          ? "bg-green-50 border-green-300 hover:bg-green-100 border-dashed"
           : bed.status === "OCCUPIED"
           ? isCritical
-            ? "bg-red-600 border-red-800 animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.6)]"
-            : "bg-slate-50 border-slate-300"
+            ? "bg-red-600 border-red-800 animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.6)] border-solid"
+            : "bg-white border-slate-300 shadow-sm border-solid"
           : bed.status === "CLEANING_REQUIRED"
-          ? "bg-yellow-50 border-yellow-400"
-          : "bg-gray-100 border-gray-300 opacity-60"
+          ? "bg-yellow-50 border-yellow-400 border-solid"
+          : "bg-gray-100 border-gray-300 opacity-60 border-solid"
       }`}
     >
       <span className={`text-xs font-mono font-bold mb-1 ${isCritical ? 'text-red-100' : 'text-gray-500'}`}>
@@ -237,7 +240,6 @@ export default function BedBureauBoard({
   };
 
   const sortedTriageQueue = [...unassignedPatients].sort((a, b) => {
-    // STEP 1: Calculate time left for 'a' and 'b'
     const now = new Date().getTime();
     const fourHoursInMs = 4 * 60 * 60 * 1000;
     const thirtyMinutesInMs = 30 * 60 * 1000;
@@ -248,28 +250,21 @@ export default function BedBureauBoard({
     const aIsBreaching = aTimeLeft <= thirtyMinutesInMs;
     const bIsBreaching = bTimeLeft <= thirtyMinutesInMs;
 
-    // RULE 1: The 30-Minute Override
     if (aIsBreaching && !bIsBreaching) return -1;
     if (!aIsBreaching && bIsBreaching) return 1;
 
-    // RULE 2: NEWS2 Score Tie-Breaker
     if (a.news2Score !== b.news2Score) {
       return b.news2Score - a.news2Score;
     }
-
-    // RULE 3: FIFO (First In, First Out)
     return aTimeLeft - bTimeLeft;
   });
 
   useEffect(() => {
-    // 1. Initialize the Supabase Client
-    // Make sure these match your .env.local variables perfectly!
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    // 2. Subscribe to changes on the Patient table
     const channel = supabase
       .channel("hospital-vitals")
       .on(
@@ -281,19 +276,15 @@ export default function BedBureauBoard({
         },
         (payload) => {
           console.log("incoming websocket payload", payload);
-          // payload.new contains the freshly updated database row!
           if (payload.table.toLocaleLowerCase() === "patient") {
             const updatedPatient = payload.new;
 
             console.log("WebSocket caught a vital sign crash!", updatedPatient);
 
-            // 3. Update the React State to trigger a UI re-render
             setWards((currentWards) => {
-              // We map through the complex nested state to find the right bed
               return currentWards.map((ward) => ({
                 ...ward,
                 beds: ward.beds.map((bed) => {
-                  // If this bed holds the patient that just crashed...
                   if (bed.patient && bed.patient?.id === updatedPatient.id) {
                     return {
                       ...bed,
@@ -309,7 +300,6 @@ export default function BedBureauBoard({
               }));
             });
 
-            // Optional: Fire a toast for the Site Manager
             if (updatedPatient.news2Score >= 7) {
               toast.error(
                 `CRITICAL: Patient ${updatedPatient.lastName} is deteriorating!`
@@ -323,7 +313,6 @@ export default function BedBureauBoard({
         if (err) console.error("📡 Supabase Connection Error:", err);
       });
 
-    // 4. Cleanup function: Close the WebSocket when the user leaves the page
     return () => {
       supabase.removeChannel(channel);
     };

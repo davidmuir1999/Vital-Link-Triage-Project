@@ -1,7 +1,7 @@
 "use client";
 
 import { Prisma } from "@prisma/client";
-import { Maximize2, EllipsisVertical, Activity, X, Save } from "lucide-react";
+import { Maximize2, EllipsisVertical, Activity, Save } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -68,7 +68,7 @@ export default function BedOptions({ bed }: { bed: BedWithPatientData }) {
     formState: { errors, isValid },
   } = useForm<VitalsFormValues>({
     resolver: zodResolver(clientVitalsSchema),
-    mode: "onChange", // Validates as the user types
+    mode: "onChange", 
     defaultValues: {
       heartRate: patient?.heartRate || 0,
       bpSystolic: patient?.bpSystolic || 0,
@@ -122,23 +122,22 @@ export default function BedOptions({ bed }: { bed: BedWithPatientData }) {
 
   return (
     <Dialog>
-      {/* TRIGGER AND DROPDOWN STAYS THE SAME */}
-      <div className="text-gray-400 flex gap-2 z-10">
+      <div className="text-gray-400 flex gap-2 z-10 p-2">
         <DialogTrigger asChild>
-          <button className="hover:text-black hover:bg-gray-100 p-1 rounded transition duration-200">
+          <button className="hover:text-black hover:bg-gray-100 p-1.5 rounded-md transition duration-200">
             <Maximize2 className="w-4 h-4" />
           </button>
         </DialogTrigger>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="hover:text-black hover:bg-gray-100 p-1 rounded transition duration-200">
+            <button className="hover:text-black hover:bg-gray-100 p-1.5 rounded-md transition duration-200">
               <EllipsisVertical className="w-4 h-4" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel>Bed Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-orange-600 font-medium cursor-pointer">
+            <DropdownMenuItem className="text-amber-600 font-medium cursor-pointer">
               Flag Cleaning Required
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -155,61 +154,58 @@ export default function BedOptions({ bed }: { bed: BedWithPatientData }) {
         </DropdownMenu>
       </div>
 
-      <DialogContent className="!max-w-[80vw] h-[90vh] flex flex-col p-6">
-        <DialogHeader className="border-b pb-4 shrink-0">
-          <DialogTitle className="text-2xl flex justify-between items-center pt-4">
-            <span>
+      <DialogContent className="max-w-[80vw]! h-[90vh] flex flex-col p-6 overflow-hidden">
+        
+        <DialogHeader className="border-b pb-4 shrink-0 pr-8">
+          <DialogTitle className="text-2xl flex items-center gap-4 pt-2">
+            <span className="font-bold text-slate-900">
               {patient.lastName}, {patient.firstName}
             </span>
             <span
-              className={`text-sm px-3 py-1 rounded-full font-bold ${
+              className={`text-sm px-3 py-1 rounded-md font-bold shadow-sm ${
                 patient.news2Score >= 7
-                  ? "bg-red-100 text-red-800"
+                  ? "bg-red-100 text-red-800 border border-red-200"
                   : patient.news2Score >= 5
-                  ? "bg-orange-100 text-orange-800"
+                  ? "bg-orange-100 text-orange-800 border border-orange-200"
                   : patient.news2Score >= 1
-                  ? "bg-yellow-100 text-yellow-800"
-                  : "bg-green-100 text-green-800"
+                  ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                  : "bg-green-100 text-green-800 border border-green-200"
               }`}
             >
               NEWS2: {patient.news2Score}
             </span>
           </DialogTitle>
-          <div className="text-sm text-gray-500 flex gap-4 mt-2">
+          <div className="text-sm text-slate-500 flex flex-wrap gap-x-6 gap-y-1 mt-2">
+            <span className="font-mono">NHS: {patient.nhsNumber}</span>
             <span>DOB: {new Date(patient.dob).toLocaleDateString()}</span>
-            <span>NHS: {patient.nhsNumber}</span>
-            <span>
-              Admitted: {new Date(patient.admissionDate).toLocaleString()}
-            </span>
+            <span>Admitted: {new Date(patient.admissionDate).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
           </div>
         </DialogHeader>
 
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 overflow-hidden mt-4">
-          {/* LEFT COLUMN: OVERVIEW & VITALS */}
-          <div className="border-r pr-6 overflow-y-auto flex flex-col pb-4">
-            <h3 className="font-bold text-lg mb-3 text-gray-800">
-              Clinical Overview
-            </h3>
-            <div className="bg-slate-50 border border-slate-100 p-3 rounded-lg mb-6">
-              <p className="font-semibold text-sm text-slate-800">
-                Presenting Complaints:
-              </p>
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 overflow-hidden mt-4">
+          
+          <div className="lg:border-r pr-2 lg:pr-6 overflow-y-auto flex flex-col pb-4">
+            
+            <h3 className="font-bold text-lg mb-3 text-slate-800">Clinical Overview</h3>
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl mb-6 shadow-sm">
+              <p className="font-semibold text-sm text-slate-800">Presenting Complaints:</p>
               <p className="text-sm text-slate-600 mt-1">
                 {patient.complaintCategory.join(", ").replace(/_/g, " ")}
               </p>
               {patient.complaintDetails && (
-                <p className="text-sm text-slate-500 italic mt-2 border-l-2 border-slate-300 pl-2">
+                <p className="text-sm text-slate-500 italic mt-3 border-l-2 border-slate-300 pl-3">
                   "{patient.complaintDetails}"
                 </p>
               )}
             </div>
 
-            <div className="flex justify-between items-end mb-3 border-b pb-2">
-              <h4 className="font-semibold text-gray-800">Current Vitals</h4>
+            <div className="flex justify-between items-end mb-4 border-b border-slate-100 pb-3">
+              <h4 className="font-bold text-slate-800">Current Vitals</h4>
+              
               {!isEditingVitals && (
                 <button
                   onClick={() => setIsEditingVitals(true)}
-                  className="text-blue-600 hover:text-blue-800 text-xs font-bold flex items-center gap-1 transition-colors"
+                  className="bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-colors border border-blue-200 shadow-sm"
                 >
                   <Activity size={14} /> Update Vitals
                 </button>
@@ -217,119 +213,50 @@ export default function BedOptions({ bed }: { bed: BedWithPatientData }) {
             </div>
 
             {isEditingVitals ? (
-              /* THE NEW UI-POLISHED FORM */
               <form
                 onSubmit={handleSubmit(onSubmit)}
-                className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-200"
+                className="flex flex-col gap-5 animate-in fade-in slide-in-from-top-2 duration-200"
               >
-                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                  <label className="flex flex-col text-sm font-medium text-gray-700">
-                    <span className="flex justify-between">
-                      Heart Rate
-                      {errors.heartRate && (
-                        <span className="text-red-500 text-[10px] uppercase font-bold">
-                          {errors.heartRate.message}
-                        </span>
-                      )}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* ... (Numerical inputs remain the same logic, but with tightened UI classes) ... */}
+                  <label className="flex flex-col text-sm font-medium text-slate-700">
+                    <span className="flex justify-between mb-1">
+                      Heart Rate {errors.heartRate && <span className="text-red-500 text-[10px] uppercase font-bold">{errors.heartRate.message}</span>}
                     </span>
-                    <input
-                      {...register("heartRate", { valueAsNumber: true })}
-                      type="number"
-                      className={`mt-1 h-9 px-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
-                        errors.heartRate
-                          ? "border-red-500 bg-red-50"
-                          : "border-gray-200"
-                      }`}
-                    />{" "}
+                    <input {...register("heartRate", { valueAsNumber: true })} type="number" className={`h-10 px-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all ${errors.heartRate ? "border-red-500 bg-red-50" : "border-slate-200"}`} />
                   </label>
 
-                  <label className="flex flex-col text-sm font-medium text-gray-700">
-                    <span className="flex justify-between">
-                      BP (Systolic)
-                      {errors.bpSystolic && (
-                        <span className="text-red-500 text-[10px] uppercase font-bold">
-                          {errors.bpSystolic.message}
-                        </span>
-                      )}
+                  <label className="flex flex-col text-sm font-medium text-slate-700">
+                    <span className="flex justify-between mb-1">
+                      BP (Systolic) {errors.bpSystolic && <span className="text-red-500 text-[10px] uppercase font-bold">{errors.bpSystolic.message}</span>}
                     </span>
-                    <input
-                      {...register("bpSystolic", { valueAsNumber: true })}
-                      type="number"
-                      className={`mt-1 h-9 px-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
-                        errors.bpSystolic
-                          ? "border-red-500 bg-red-50"
-                          : "border-gray-200"
-                      }`}
-                    />{" "}
+                    <input {...register("bpSystolic", { valueAsNumber: true })} type="number" className={`h-10 px-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all ${errors.bpSystolic ? "border-red-500 bg-red-50" : "border-slate-200"}`} />
                   </label>
 
-                  <label className="flex flex-col text-sm font-medium text-gray-700">
-                    <span className="flex justify-between">
-                      Resp Rate
-                      {errors.respiratoryRate && (
-                        <span className="text-red-500 text-[10px] uppercase font-bold">
-                          {errors.respiratoryRate.message}
-                        </span>
-                      )}
+                  <label className="flex flex-col text-sm font-medium text-slate-700">
+                    <span className="flex justify-between mb-1">
+                      Resp Rate {errors.respiratoryRate && <span className="text-red-500 text-[10px] uppercase font-bold">{errors.respiratoryRate.message}</span>}
                     </span>
-                    <input
-                      {...register("respiratoryRate", { valueAsNumber: true })}
-                      type="number"
-                      className={`mt-1 h-9 px-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
-                        errors.respiratoryRate
-                          ? "border-red-500 bg-red-50"
-                          : "border-gray-200"
-                      }`}
-                    />{" "}
+                    <input {...register("respiratoryRate", { valueAsNumber: true })} type="number" className={`h-10 px-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all ${errors.respiratoryRate ? "border-red-500 bg-red-50" : "border-slate-200"}`} />
                   </label>
 
-                  <label className="flex flex-col text-sm font-medium text-gray-700">
-                    <span className="flex justify-between">
-                      O2 Saturation %
-                      {errors.oxygenSat && (
-                        <span className="text-red-500 text-[10px] uppercase font-bold">
-                          {errors.oxygenSat.message}
-                        </span>
-                      )}
+                  <label className="flex flex-col text-sm font-medium text-slate-700">
+                    <span className="flex justify-between mb-1">
+                      SpO2 % {errors.oxygenSat && <span className="text-red-500 text-[10px] uppercase font-bold">{errors.oxygenSat.message}</span>}
                     </span>
-                    <input
-                      {...register("oxygenSat", { valueAsNumber: true })}
-                      type="number"
-                      className={`mt-1 h-9 px-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
-                        errors.oxygenSat
-                          ? "border-red-500 bg-red-50"
-                          : "border-gray-200"
-                      }`}
-                    />{" "}
+                    <input {...register("oxygenSat", { valueAsNumber: true })} type="number" className={`h-10 px-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all ${errors.oxygenSat ? "border-red-500 bg-red-50" : "border-slate-200"}`} />
                   </label>
 
-                  <label className="flex flex-col text-sm font-medium text-gray-700">
-                    <span className="flex justify-between">
-                      Temperature °C
-                      {errors.temperature && (
-                        <span className="text-red-500 text-[10px] uppercase font-bold">
-                          {errors.temperature.message}
-                        </span>
-                      )}
+                  <label className="flex flex-col text-sm font-medium text-slate-700">
+                    <span className="flex justify-between mb-1">
+                      Temp °C {errors.temperature && <span className="text-red-500 text-[10px] uppercase font-bold">{errors.temperature.message}</span>}
                     </span>
-                    <input
-                      {...register("temperature", { valueAsNumber: true })}
-                      type="number"
-                      step="0.1"
-                      className={`mt-1 h-9 px-3 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
-                        errors.temperature
-                          ? "border-red-500 bg-red-50"
-                          : "border-gray-200"
-                      }`}
-                    />{" "}
+                    <input {...register("temperature", { valueAsNumber: true })} type="number" step="0.1" className={`h-10 px-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all ${errors.temperature ? "border-red-500 bg-red-50" : "border-slate-200"}`} />
                   </label>
 
-                  <label className="flex flex-col text-sm font-medium text-gray-700">
-                    Consciousness
-                    <select
-                      {...register("consciousness")}
-                      className="mt-1 h-9 px-3 border border-gray-200 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
-                    >
+                  <label className="flex flex-col text-sm font-medium text-slate-700">
+                    <span className="mb-1">Consciousness</span>
+                    <select {...register("consciousness")} className="h-10 px-3 border border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
                       <option value="ALERT">Alert</option>
                       <option value="CONFUSION">New Confusion</option>
                       <option value="VOICE">Responds to Voice</option>
@@ -339,123 +266,72 @@ export default function BedOptions({ bed }: { bed: BedWithPatientData }) {
                   </label>
                 </div>
 
-                <div className="flex flex-col gap-2 mt-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      {...register("isOnOxygen")}
-                      type="checkbox"
-                      className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
+                <div className="flex flex-col gap-3 mt-2">
+                  <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors shadow-sm">
+                    <input {...register("isOnOxygen")} type="checkbox" className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-gray-800 group-hover:text-blue-700 transition-colors">
-                        Supplemental Oxygen
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        Patient is currently receiving oxygen therapy
-                      </span>
+                      <span className="text-sm font-bold text-slate-800">Supplemental Oxygen</span>
+                      <span className="text-xs text-slate-500">Patient is currently receiving air/oxygen therapy</span>
                     </div>
                   </label>
 
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      {...register("hypercapnicFailure")}
-                      type="checkbox"
-                      className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
+                  <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors shadow-sm">
+                    <input {...register("hypercapnicFailure")} type="checkbox" className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-gray-800 group-hover:text-blue-700 transition-colors">
-                        Target SpO2 88-92%
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        COPD / Known hypercapnic respiratory failure
-                      </span>
+                      <span className="text-sm font-bold text-slate-800">Target SpO2 88-92%</span>
+                      <span className="text-xs text-slate-500">COPD / Known hypercapnic respiratory failure</span>
                     </div>
                   </label>
                 </div>
 
-                <div className="flex gap-3 justify-end mt-4 pt-4 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingVitals(false)}
-                    disabled={isPending}
-                    className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                  >
+                <div className="flex gap-3 justify-end mt-2 pt-4 border-t border-slate-100">
+                  <button type="button" onClick={() => setIsEditingVitals(false)} disabled={isPending} className="px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
                     Cancel
                   </button>
-                  <button
-                    type="submit"
-                    disabled={isPending || !isValid}
-                    className="px-4 py-2 text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 rounded-md shadow-sm transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Save size={16} />{" "}
-                    {isPending ? "Calculating..." : "Save & Calculate"}
+                  <button type="submit" disabled={isPending || !isValid} className="px-5 py-2.5 text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 rounded-lg shadow-md transition-all flex items-center gap-2 disabled:opacity-50">
+                    <Save size={16} /> {isPending ? "Calculating..." : "Save Vitals"}
                   </button>
                 </div>
               </form>
             ) : (
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="bg-white border border-gray-100 shadow-sm p-3 rounded-lg flex items-center justify-between">
-                  <span className="text-gray-500 font-medium">HR</span>
-                  <span className="font-bold text-gray-900">
-                    {patient.heartRate}{" "}
-                    <span className="text-xs font-normal text-gray-400">
-                      bpm
-                    </span>
-                  </span>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="bg-white border border-slate-200 shadow-sm p-4 rounded-xl flex items-center justify-between">
+                  <span className="text-slate-500 font-bold text-xs uppercase tracking-wider">HR</span>
+                  <span className="font-black text-slate-900 text-lg">{patient.heartRate} <span className="text-xs font-medium text-slate-400">bpm</span></span>
                 </div>
-                <div className="bg-white border border-gray-100 shadow-sm p-3 rounded-lg flex items-center justify-between">
-                  <span className="text-gray-500 font-medium">BP</span>
-                  <span className="font-bold text-gray-900">
-                    {patient.bpSystolic}
-                  </span>
+                <div className="bg-white border border-slate-200 shadow-sm p-4 rounded-xl flex items-center justify-between">
+                  <span className="text-slate-500 font-bold text-xs uppercase tracking-wider">BP</span>
+                  <span className="font-black text-slate-900 text-lg">{patient.bpSystolic}</span>
                 </div>
-                <div className="bg-white border border-gray-100 shadow-sm p-3 rounded-lg flex items-center justify-between">
-                  <span className="text-gray-500 font-medium">Resp</span>
-                  <span className="font-bold text-gray-900">
-                    {patient.respiratoryRate}
-                  </span>
+                <div className="bg-white border border-slate-200 shadow-sm p-4 rounded-xl flex items-center justify-between">
+                  <span className="text-slate-500 font-bold text-xs uppercase tracking-wider">Resp</span>
+                  <span className="font-black text-slate-900 text-lg">{patient.respiratoryRate}</span>
                 </div>
-                <div className="bg-white border border-gray-100 shadow-sm p-3 rounded-lg flex items-center justify-between">
-                  <span className="text-gray-500 font-medium">SpO2</span>
-                  <span className="font-bold text-gray-900">
-                    {patient.oxygenSat}%{" "}
-                    {patient.isOnOxygen && (
-                      <span className="text-blue-500 text-xs font-bold ml-1">
-                        O2
-                      </span>
-                    )}
-                  </span>
+                <div className="bg-white border border-slate-200 shadow-sm p-4 rounded-xl flex items-center justify-between">
+                  <span className="text-slate-500 font-bold text-xs uppercase tracking-wider">SpO2</span>
+                  <span className="font-black text-slate-900 text-lg">{patient.oxygenSat}% {patient.isOnOxygen && <span className="text-blue-500 text-xs font-bold ml-1 bg-blue-50 px-1 py-0.5 rounded">O2</span>}</span>
                 </div>
-                <div className="bg-white border border-gray-100 shadow-sm p-3 rounded-lg flex items-center justify-between">
-                  <span className="text-gray-500 font-medium">Temp</span>
-                  <span className="font-bold text-gray-900">
-                    {patient.temperature}°
-                  </span>
+                <div className="bg-white border border-slate-200 shadow-sm p-4 rounded-xl flex items-center justify-between">
+                  <span className="text-slate-500 font-bold text-xs uppercase tracking-wider">Temp</span>
+                  <span className="font-black text-slate-900 text-lg">{patient.temperature}°</span>
                 </div>
-                <div className="bg-white border border-gray-100 shadow-sm p-3 rounded-lg flex items-center justify-between">
-                  <span className="text-gray-500 font-medium">Conscious</span>
-                  <span className="font-bold text-gray-900 truncate w-20 text-right">
-                    {patient.consciousness}
-                  </span>
+                <div className="bg-white border border-slate-200 shadow-sm p-4 rounded-xl flex items-center justify-between">
+                  <span className="text-slate-500 font-bold text-xs uppercase tracking-wider">ACVPU</span>
+                  <span className="font-black text-slate-900 truncate w-24 text-right">{patient.consciousness}</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* RIGHT COLUMN: CLINICAL NOTES */}
-          <div className="h-full overflow-hidden flex flex-col bg-slate-50/50 rounded-xl border border-slate-100">
-            <div className="p-4 border-b border-slate-100 bg-white">
-              <h3 className="font-bold text-lg text-gray-800">
-                Clinical Notes
-              </h3>
+          <div className="h-full overflow-hidden flex flex-col bg-slate-50/50 rounded-2xl border border-slate-200 shadow-inner">
+            <div className="p-4 border-b border-slate-200 bg-white shadow-sm z-10">
+              <h3 className="font-bold text-lg text-slate-800">Clinical Notes Log</h3>
             </div>
             <div className="flex-1 overflow-hidden p-2">
               <ClinicalNotesFeed
                 patientId={patient.id}
                 initialNotes={[...patient.history].sort(
-                  (a, b) =>
-                    new Date(a.timestamp).getTime() -
-                    new Date(b.timestamp).getTime()
+                  (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
                 )}
               />
             </div>
