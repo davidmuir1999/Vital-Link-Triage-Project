@@ -91,7 +91,7 @@ export default function BedOptions({ bed }: { bed: BedWithPatientData }) {
     )
       return;
     startTransition(async () => {
-      const result = await dischargePatient(bed.id, patient.id);
+      const result = await dischargePatient(patient.id, bed.id);
       if (result.error) toast.error(result.error);
       else
         toast.success(`${patient.firstName} ${patient.lastName} discharged.`);
@@ -225,7 +225,6 @@ export default function BedOptions({ bed }: { bed: BedWithPatientData }) {
                 className="flex flex-col gap-5 animate-in fade-in slide-in-from-top-2 duration-200"
               >
                 <div className="grid grid-cols-2 gap-4">
-                  {/* ... (Numerical inputs remain the same logic, but with tightened UI classes) ... */}
                   <label className="flex flex-col text-sm font-medium text-slate-700">
                     <span className="flex justify-between mb-1">
                       Heart Rate{" "}
