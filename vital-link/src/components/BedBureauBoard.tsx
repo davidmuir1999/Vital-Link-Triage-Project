@@ -272,7 +272,6 @@ export default function BedBureauBoard({
         {
           event: "UPDATE",
           schema: "public",
-          table: "*",
         },
         (payload) => {
           console.log("incoming websocket payload", payload);
@@ -350,7 +349,7 @@ export default function BedBureauBoard({
           console.log(`Simulating crash for ${randomPatient.lastName}`);
           await simulatePatientCrash(randomPatient.id);
         }
-      }, 15000);
+      }, 10000);
     }
   };
 
