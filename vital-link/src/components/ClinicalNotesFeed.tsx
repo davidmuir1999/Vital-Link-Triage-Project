@@ -42,7 +42,7 @@ export default function ClinicalNotesFeed({
       <h3 className="font-bold text-lg mb-3">Clinical Notes</h3>
 
       {/* 1. The scrollable feed of existing notes */}
-      <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-2">
+      <div className="flex-1 overflow-y-auto space-y-3 mb-4 p-1">
         {initialNotes?.length === 0 ? (
           <p className="text-gray-400 text-sm italic">
             No clinical notes recorded yet.

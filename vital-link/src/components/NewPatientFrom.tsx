@@ -156,7 +156,6 @@ export default function NewPatientForm() {
                       placeholder="123 456 7890"
                       {...field}
                       onChange={(e) => {
-                        // The Masking Logic: Strip letters, limit to 10, add spaces
                         const rawValue = e.target.value.replace(/\D/g, "");
                         const formatted =
                           rawValue.length > 6

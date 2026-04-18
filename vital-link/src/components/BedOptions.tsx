@@ -222,7 +222,7 @@ export default function BedOptions({ bed }: { bed: BedWithPatientData }) {
             {isEditingVitals ? (
               <form
                 onSubmit={handleSubmit(onSubmit)}
-                className="flex flex-col gap-5 animate-in fade-in slide-in-from-top-2 duration-200"
+                className="flex flex-col gap-5 animate-in fade-in slide-in-from-top-2 duration-200 p-1"
               >
                 <div className="grid grid-cols-2 gap-4">
                   <label className="flex flex-col text-sm font-medium text-slate-700">

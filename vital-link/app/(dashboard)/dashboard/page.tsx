@@ -3,16 +3,12 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 import { redirect } from "next/navigation"
 
 export default async function DashboardIndex() {
-  // 1. Get the Session
   const session = await getServerSession(authOptions)
   
-  // 2. If no session, kick to login (Safety Net)
   if (!session) redirect("/login")
 
   const role = session.user.role
 
-  // 3. The "Traffic Control" Switch
-  // This automatically sends them to their correct home base
   switch (role) {
     case 'TRIAGE_NURSE':
       redirect('/triage')

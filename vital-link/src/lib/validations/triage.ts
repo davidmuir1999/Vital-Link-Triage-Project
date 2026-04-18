@@ -41,11 +41,9 @@ const ComplaintCategoryEnum = z.enum([
 ]);
 
 export const TriageSchema = z.object({
-  // --- Demographics ---
   firstName: z.string().min(2, "First name is too short"),
   lastName: z.string().min(2, "Last name is too short"),
 
-  // HTML Date inputs return strings (e.g. "1990-01-01"), so we coerce them to Date objects
   dob: z.preprocess(
     (val) =>
       val === "" || val === undefined ? undefined : new Date(val as string),
@@ -54,12 +52,12 @@ export const TriageSchema = z.object({
   gender: z.enum(["MALE", "FEMALE", "OTHER"], {
     error: () => "Please select a gender",
   }),
-  nhsNumber: z
-    .string()
-    .length(10, "NHS Number must be exactly 10 digits")
-    .regex(/^\d+$/, "NHS Number must contain only numbers"),
+  nhsNumber: z.string()
+  .transform((val) => val.replace(/\s/g, "")) 
+  .pipe(
+    z.string().length(10, "NHS Number must be exactly 10 digits")
+  ),
 
-  // --- Clinical Info ---
   respiratoryRate: z.preprocess(
     (val) => (val === "" || val === undefined ? undefined : Number(val)),
     z.number({ error: "Resrpiratory rate is required" }).min(0).max(100)
@@ -84,7 +82,6 @@ export const TriageSchema = z.object({
     z.number({ error: "Heart rate is required" }).min(0).max(300)
   ),
 
-  // ACVPU Scale
   consciousness: z.enum([
     "ALERT",
     "CONFUSION",
@@ -99,5 +96,4 @@ export const TriageSchema = z.object({
   complaintDetails: z.string().optional(),
 });
 
-// Export the type so we can use it in our React Form
 export type TriageFormData = z.infer<typeof TriageSchema>;
