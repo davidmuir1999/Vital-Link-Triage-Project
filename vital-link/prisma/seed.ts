@@ -6,8 +6,6 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('🌱 Starting Infrastructure Seed (Staff & Wards)...')
 
-  // 1. Clean the database
-  // Deleting in this order prevents foreign key constraints errors
   await prisma.clinicalLog.deleteMany()
   await prisma.patient.deleteMany()
   await prisma.bed.deleteMany()
@@ -39,7 +37,6 @@ async function main() {
   }
   console.log(`👤 Created ${staff.length} Staff Members.`)
 
-  // 3. Create Wards & Generate Beds
   const wards = [
     { name: 'Emergency Assessment (EAU)', type: 'Emergency', bedCount: 10 },
     { name: 'Cardiology (Ward 4)', type: 'Specialist', bedCount: 8 },
