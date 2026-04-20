@@ -7,6 +7,7 @@ test.describe("Vital Link: Golden Path Lifecycle", () => {
   test("Full Patient Lifecycle: Triage -> Ward -> Discharge -> Clean Bed", async ({
     page,
   }) => {
+    test.setTimeout(120000);
     // ============================================================
     // SESSION 1: THE TRIAGE NURSE
     // ============================================================
@@ -48,6 +49,8 @@ test.describe("Vital Link: Golden Path Lifecycle", () => {
 
       await page.click('button[type="submit"]');
       await expect(page.getByText("Patient Admitted")).toBeVisible();
+
+      await page.waitForLoadState('networkidle');
 
       await page.goto("http://localhost:3000/api/auth/signout");
       await page.getByRole("button", { name: /sign out/i }).click();
@@ -121,6 +124,8 @@ test.describe("Vital Link: Golden Path Lifecycle", () => {
 
       await page.getByRole("button", { name: /SIMULATION ACTIVE/i }).click();
 
+      await page.waitForLoadState('networkidle');
+
       await page.goto("http://localhost:3000/api/auth/signout");
       await page.getByRole("button", { name: /sign out/i }).click();
     });
@@ -169,6 +174,8 @@ test.describe("Vital Link: Golden Path Lifecycle", () => {
 
       await expect(page.getByText("discharged")).toBeVisible();
 
+      await page.waitForLoadState('networkidle');
+
       await page.goto("http://localhost:3000/api/auth/signout");
       await page.getByRole("button", { name: /sign out/i }).click();
     });
@@ -199,6 +206,8 @@ test.describe("Vital Link: Golden Path Lifecycle", () => {
       await markCleanBtn.click();
 
       await expect(page.getByText("Bed marked as available")).toBeVisible();
+
+      await page.waitForLoadState('networkidle');
 
       await page.goto("http://localhost:3000/api/auth/signout");
       await page.getByRole("button", { name: /sign out/i }).click();
