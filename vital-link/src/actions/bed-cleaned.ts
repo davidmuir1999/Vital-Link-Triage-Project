@@ -28,7 +28,7 @@ export async function bedCleaned(rawBedId: string) {
     });
     revalidatePath("/dashboard/cleaning");
     revalidatePath("/dashboard/ward");
-    revalidatePath("/dashboard/ward/[wardId]");
+    revalidatePath("/dashboard/ward/[wardId]", 'page');
     revalidatePath("/dashboard/ops");
     return { success: true };
   } catch (error) {
