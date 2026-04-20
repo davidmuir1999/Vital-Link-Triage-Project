@@ -47,7 +47,7 @@ export async function addClientNote(rawPatientId: string, rawMessage: string) {
         authorId: user.id,
       },
     });
-    revalidatePath("/ward/[wardId]", "page");
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
     return { error: "Failed to save clinical note." };

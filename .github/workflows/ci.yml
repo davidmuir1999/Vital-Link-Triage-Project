@@ -45,6 +45,7 @@ jobs:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
