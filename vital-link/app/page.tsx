@@ -163,8 +163,8 @@ export default function Home() {
       <footer className="w-full py-6 text-center border-t border-slate-200 bg-white">
         <p className="text-xs text-slate-500 font-medium flex items-center justify-center gap-1">
           <ShieldCheck className="w-4 h-4 text-slate-400" />
-          Vital Link Hospital System © {new Date().getFullYear()}. A project
-          developed by David Muir.
+          Vital Link Hospital System © {new Date().getFullYear()}.
+          Developed by David Muir.
         </p>
       </footer>
     </div>

@@ -14,6 +14,10 @@ import {
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
+  useSensor,     
+  useSensors,      
+  MouseSensor,     
+  TouchSensor,
 } from "@dnd-kit/core";
 import { toast } from "sonner";
 
@@ -168,6 +172,21 @@ export default function BedBureauBoard({
 }: BedBureauBoardProps) {
   const [unassignedPatients, setUnassignedPatients] =
     useState<Patient[]>(initialPatients);
+
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 10,
+    },
+  });
+
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 250,
+      tolerance: 5,
+    },
+  });
+
+  const sensors = useSensors(mouseSensor, touchSensor);
 
   const [isMounted, setIsMounted] = useState(false);
 
@@ -371,10 +390,10 @@ export default function BedBureauBoard({
   }
 
   return (
-    <div className="flex h-full gap-6">
-      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="w-1/3 bg-gray-50 border rounded-lg p-4 flex flex-col">
-          <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
+    <div className="flex flex-col lg:flex-row  lg:h-full gap-6 lg:overflow-hidden pb-10 lg:pb-0">
+      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <div className="w-full lg:w-1/3 bg-gray-50 border rounded-lg p-4 flex flex-col h-[45vh] lg:h-auto">
+          <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2 shrink-0">
             Triage Queue ({unassignedPatients.length})
           </h2>
 
@@ -390,15 +409,15 @@ export default function BedBureauBoard({
             )}
           </div>
         </div>
-        <div className="w-2/3 bg-white border rounded-lg p-4 overflow-y-auto">
-          <div className="flex justify-between items-center border-b pb-2 mb-4">
-            <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
+        <div className="w-full lg:w-2/3 bg-white border rounded-lg p-4 lg:overflow-y-auto flex flex-col">
+          <div className="flex justify-between items-center border-b pb-2 mb-4 shrink-0">
+            <h2 className="text-xl font-bold text-gray-800">
               Hospital Capacity
             </h2>
 
             <button
               onClick={toggleSimulation}
-              className={`flex items-center gap-2 px-3 py-1.5 text-sm font-bold rounded-md transition-all ${
+              className={`flex items-center gap-2 px-3 py-1.5 sm:text-sm text-xs font-bold rounded-md transition-all ${
                 isSimulating
                   ? "bg-red-100 text-red-700 border border-red-300 animate-pulse"
                   : "bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200"
@@ -409,21 +428,21 @@ export default function BedBureauBoard({
             </button>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-6 flex-1 overflow-y-auto">
             {wards.map((ward) => {
               const sortedBeds = sortBedsByLabel(ward.beds);
               return (
-                <div key={ward.id} className="border rounded bg-gray-50 p-4">
+                <div key={ward.id} className="border rounded bg-gray-50 p-3 sm:p-4">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-lg text-gray-700">
+                    <h3 className="font-bold text-base sm:text-lg text-gray-700">
                       {ward.name}
                     </h3>
-                    <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                    <span className="text-xs sm:text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
                       {ward.type}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
                     {sortedBeds.map((bed) => (
                       <DroppableBed key={bed.id} bed={bed} />
                     ))}
@@ -435,13 +454,13 @@ export default function BedBureauBoard({
         </div>
         <DragOverlay>
           {activePatient ? (
-            <div className="bg-white border-2 border-blue-500 p-3 rounded shadow-2xl scale-105 cursor-grabbing rotate-3 w-70">
+            <div className="bg-white border-2 border-blue-500 p-3 rounded shadow-2xl scale-105 cursor-grabbing rotate-3 w-64 sm:w-70 z-50">
               <div className="flex justify-between items-start">
                 <div>
                   <p className="font-semibold text-gray-900">
                     {activePatient.lastName}, {activePatient.firstName}
                   </p>
-                  <p className="text-xs text-gray-500 truncate w-40">
+                  <p className="text-xs text-gray-500 truncate w-32 sm:w-40">
                     {activePatient.complaintCategory
                       .join(", ")
                       .replace(/_/g, " ")}
