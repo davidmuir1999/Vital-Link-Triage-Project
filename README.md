@@ -21,8 +21,8 @@ Use the following credentials to explore the Role-Based Access Control (RBAC) an
 | Role | Email | Password | Primary Capabilities |
 | :--- | :--- | :--- | :--- |
 | **Triage Nurse** | `triagenurse@nhs.net` | `password` | Admits patients, logs initial vitals, calculates NEWS2 score. |
-| **Ward Doctor** | `doctor@nhs.net` | `password` | Reviews clinical notes, updates vitals, processes discharges. |
 | **Site Manager** | `manager@nhs.net` | `password` | Oversees hospital capacity, manages SLA priority queues. |
+| **Ward Doctor** | `doctor@nhs.net` | `password` | Reviews clinical notes, updates vitals, processes discharges. |
 | **Cleaning Staff**| `cleaner@nhs.net` | `password` | Receives bed cleaning flags, marks beds as available. |
 
 -----
