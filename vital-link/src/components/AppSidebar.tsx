@@ -33,15 +33,16 @@ const navItems = [
 ];
 
 export function AppSidebar({session}: {session: Session | null}) {
-  const { state } = useSidebar();
+  const { isMobile, state } = useSidebar();
+
+  const isExpanded = state === "expanded" || isMobile;
 
   return (
     <Sidebar collapsible="icon">
-      {/* --- HEADER: Logo & Branding --- */}
       <SidebarHeader className={`h-16 border-b border-gray-200 ${ state === "expanded" ? "p-4" : "p-2 items-center justify-center"}`}>
         <div className="flex items-center gap-2 overflow-hidden">
           <HeartPulse className="w-6 h-6 text-blue-700 shrink-0" />
-          {state === "expanded" && (
+          {isExpanded && (
             <span className="text-xl font-bold text-blue-700 whitespace-nowrap">
               Vital-Link
             </span>
@@ -69,9 +70,8 @@ export function AppSidebar({session}: {session: Session | null}) {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* --- FOOTER: User Profile & Logout --- */}
       <SidebarFooter className="p-4 border-t border-gray-200 overflow-hidden">
-        {state === "expanded" ? (
+        {isExpanded ? (
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold shrink-0">
@@ -90,7 +90,6 @@ export function AppSidebar({session}: {session: Session | null}) {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4">
-            {/* When collapsed, just show the avatar */}
             <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold shrink-0">
               {session?.user?.name?.[0] || "U"}
             </div>

@@ -54,14 +54,14 @@ export default async function WardPage({ params }: PageProps) {
         <div className="flex items-center gap-3">
           <Link
             href={`/ward/${wardId}/handover`}
-            className="flex items-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 px-4 py-2 rounded-md font-bold transition-colors shadow-sm"
+            className="flex items-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 px-4 py-2 rounded-md font-bold transition-colors shadow-sm whitespace-nowrap h-10"
           >
             <FileText size={18} />
             <span>Handover PDF</span>
           </Link>
           <Link
             href="/ward"
-            className="px-4 py-2 text-sm font-bold text-slate-600 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors flex items-center justify-center shadow-sm"
+            className="px-4 py-2 text-sm font-bold text-slate-600 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors flex items-center justify-center shadow-sm whitespace-nowrap h-10"
           >
             ← Back to List
           </Link>
